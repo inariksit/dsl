@@ -52,13 +52,17 @@ So, we need the usual temporal notions of deadlines, durations, relative and abs
   to iterate several times over the rule set to determine the applicable rules.
 #+END_QUOTE
 
+#+begin_quote
+*Meng's thoughts*: Yes, that makes sense. What software already knows how to reason in this way?
+#+end_quote
+
 *** Deontics: Obligations, Permissions, and Prohibitions
 
-Meng thinks the whole Chisholm paradox is only a problem in a framework that doesn't define obligations in terms of breach.
+Meng thinks the whole Chisholm family of paradoxes is only a problem in a framework that doesn't define obligations in terms of breach.
 
 "You gotta do X." "Or what?" "Or nothing." "Then I don't gotta do it, do I?"
 
-So, if the penalties for each level of murder -- gentle vs bloody -- are explicitly given in a partial order, then the paradox goes away.
+So, in Forrester's paradox, if the penalties for each level of murder -- gentle vs bloody -- are explicitly given in a partial order, then the paradox goes away.
 
 #+BEGIN_QUOTE
 *Comment MS:* I agree and hope we can do without explicitly using deontic
@@ -74,6 +78,24 @@ So, if the penalties for each level of murder -- gentle vs bloody -- are explici
 
 Question: which kind of obligations do we have: /to do/ or /to be/?
 #+END_QUOTE
+
+#+begin_quote
+*Meng's thoughts: Right. Let's agree that we aren't going to do traditional SDL.
+
+We borrow some of the useful ideas of deontic logic, e.g. may Y => not must not Y.
+
+But we don't talk about "must be", we only talk about "must do".
+
+People have choice, the way people had choice in the Israeli daycare case: [[https://rady.ucsd.edu/faculty/directory/gneezy/pub/docs/fine.pdf]["A Fine is a Price"]].
+
+The gentle murderer gets 10 years in prison.
+
+The bloody murderer gets 20 years in prison.
+
+No problem.
+
+Hvitved takes this approach; chapter 2 talks about choice.
+#+end_quote
 
 *** Party
 
@@ -148,6 +170,7 @@ What if the computation actually depends on a whole bunch of State? In fact, it 
 
 While this is not recommended, some styles of drafting say:
 
+Definition of X:
 - for the purposes of P1, X is X1;
 - for the purposes of P2, X is X2;
 - however, if the use of this variable X causes some Y to be negative, then X shall be the nearest number needed for Y to be non-negative.
@@ -164,7 +187,7 @@ This isn't strictly a logical matter, but if we are to extract (controlled) natu
 
 *** Macros and Functions
 
-"Homoiconicity" refers to the idea that a program may modify itself. Contracts and laws frequently include "pragma" and "macro" statements intended to influence interpretation.
+"Homoiconicity" refers to the idea that a program may modify itself. Contracts and laws frequently include "pragma" and "macro" type statements intended to influence interpretation.
 
 *** <<<Rules and Metarules>>>
 
@@ -540,7 +563,7 @@ The default name is made by
 A module can explicitly give itself a name by saying
 
 #+begin_src haskell :noweb-ref l4-example1
-module Foo.Bar.Baz where
+  module Foo.Bar.Baz where
 #+end_src
 
 #+begin_src bnfc :noweb-ref l4rules
@@ -609,20 +632,57 @@ An L4 statement is one of the following:
 **** Entities and Knols
 
 #+begin_src bnfc :noweb-ref l4rules
-  Entity.    Entity    ::= "ENTITY" Ident
-                           "ISA"   UIdent
+  Entity.    Entity    ::= "ENTITY" ObjAttr
+                           "ISA"    ObjAttr
                            Asof
-                           "WITH"  [WithKeyVal]
+                           WithExpr
+                           WhereExpr;
 
-  layout "WITH" ;
-  separator WithKeyVal ";" ;
+  With.      WithExpr  ::= "WITH" "{" [WithIn] "}";
+  rules      WithIn    ::= EqList | TraceExpr;
+  separator nonempty WithIn ";";
 
-  rules  WithKeyVal ::= ObjAttr "=" JunctionList
-                      | ObjAttr "=" BraceList
-                      | ObjAttr "=" String
-                      | ObjAttr "=" ObjAttr ;
+  rules      TraceExpr ::= "TRACE" "{" [LogEvent] "}";
+  rules      LogEvent ::= Iso8601 ObjAttr ObjAttr ObjAttr BlahBlah ;
+  separator nonempty LogEvent ";";
+  separator nonempty Blah "";
+  rules      BlahBlah ::= [Blah] | ;
+  rules      Blah     ::= Numberlike | ObjAttr | JunctionList | BraceList;
+
+  layout "WITH", "TRACE", "WHERE" ;
+  separator nonempty EqList ";" ;
+
+  rules     WhereExpr ::= | "WHERE" "{" [WhereIn] "}" ;
+  rules     WhereIn   ::= ObjAttr "ISA" ObjAttr 
+                        | ObjAttr "ISA" ObjAttr WithExpr
+                        | EqList;
+  separator nonempty WhereIn ";";
+
+  EqList.      EqList ::= [KeyVal];
+
+  rules      UIdentList ::= [UIdentElem];
+  rules      UIdentElem ::= UIdent;
+  separator nonempty UIdentElem ".";
+
+  token UIdent (upper (letter | digit | '_')*) ;
 
   rules BraceList ::= "{" [KeyVal] "}" ;
+  rules ArrayOfBraces ::= "[" [BraceList] "]";
+  separator nonempty BraceList "," ;
+
+  Knol.       Knol     ::= "KNOL" ObjAttr WithExpr;
+#+end_src
+
+**** Temporals
+
+#+begin_src bnfc :noweb-ref l4rules
+  Asof.      Asof      ::= "ASOF" DateTime ;
+  AsofNull.  Asof      ::= ;
+  rules      DateTime  ::= Iso8601 | "PRESENT" | "NOW" ;
+  rules      Iso8601   ::= YYYYMMDD | YYYYMMDDTHHMM;
+
+  token YYYYMMDD      ( digit digit digit digit '-'? digit digit '-'? digit digit );
+  token YYYYMMDDTHHMM ( digit digit digit digit '-'? digit digit '-'? digit digit 'T' digit digit digit digit );
 #+end_src
 
 **** A Rule Statement
@@ -633,7 +693,7 @@ An L4 statement is one of the following:
                          | RuleNum   RuleID 
                          | RuleNum            RuleName
                          |           RuleID   RuleName ;
-  RID.       RuleID    ::= Ident ;
+  rules      RuleID    ::= ObjAttr ;
   RName.     RuleName  ::= LangStrings ;
   RNum.      RuleNum   ::= Integer;
 
@@ -643,17 +703,26 @@ An L4 statement is one of the following:
 
   -- DEEM Item.isPotato AND Item.isVegetable WHEN ...
   RBDeem.    RuleBody  ::= "DEEM" [ObjAttrAnd] "WHEN" PredExpr;
+  RBTOBE.    RuleBody  ::= "DEEM" ObjAttr "TOBE" ObjAttr "WHEN" PredExpr;
   separator nonempty ObjAttrAnd "AND";
   ObjAttrAnd1. ObjAttrAnd ::= ObjAttr ;
 
   -- ... WHEN  
-  PEOA.      PredExpr  ::= ObjAttr;
+  PEUnify.   PredExpr  ::= UnifyExpr;
   PEAnd.     PredExpr  ::= PredExpr "AND" PredExpr;
   PEOr.      PredExpr  ::= PredExpr "OR"  PredExpr;
   PEME.      PredExpr1 ::= MatchExpr;
   _.         PredExpr2 ::= "(" PredExpr ")";
   coercions PredExpr 2;
   -- do we really need to say coercions?
+
+  rules      UnifyExpr ::= [UnifyElem];
+  rules      UnifyElem ::= ObjAttrElem
+                        |  UnifyBracket
+                        |  UnifyStar;
+  separator nonempty UnifyElem ".";
+  rules      UnifyStar ::= "*" ;
+  rules      UnifyBracket ::= "[" CommaList "]" ;
 
   rules      FancyBoolOp ::= PlainBoolOp Likelihood;
 
@@ -662,9 +731,17 @@ An L4 statement is one of the following:
   rules      Likelihood  ::= "" | "LIKELY" | "UNLIKELY";
 
   -- need more cases -- junctionlists
-  ME_OA_JL.  MatchExpr  ::= ObjAttr "~" JunctionList ;
+  ME_OA_JL.  MatchExpr  ::= UnifyExpr "~" JunctionList ;
+  ME_OA_Bin. MatchExpr  ::= UnifyExpr BinOp Numberlike ;
   ME_True.   MatchExpr  ::= "True";
   ME_False.  MatchExpr  ::= "False";
+
+  rules      BinOp      ::= "+" | "-" | "*" | "/" | "<" | ">" | "<=" | ">=" | "==";
+
+  rules      Numeric    ::= Integer | Double ;
+
+  rules      Numberlike   ::= "$" Numeric
+                            | Numeric ;
 
   JL_And.    JunctionList ::= "["   AndList "]" ;
   JL_Or.     JunctionList ::= "["    OrList "]" ;
@@ -690,14 +767,21 @@ An L4 statement is one of the following:
   rules      OrElem ::= ObjAttr | String;
   separator nonempty OrElem "|";
 
-  rules      ObjAttrElem  ::= Ident ;                     -- Foo
+  rules      ObjAttrElem  ::= Ident | UIdent ;            -- Foo
 
   OA_dots.   ObjAttr      ::= [ObjAttrElem];              -- Foo.Bar.Baz
   OA_method. ObjAttr      ::= ObjAttr "(" CommaList ")" ; -- Foo.Bar(Baz, Quux)
   separator nonempty ObjAttrElem ".";
 
   rules      KeyVal     ::= ObjAttr ":" ObjAttr
-                          | ObjAttr "=" ObjAttr ;
+                          | ObjAttr "=" ObjAttr
+                          | ObjAttr "=" String
+                          | ObjAttr "=" Numberlike
+                          | ObjAttr "=" BraceList
+                          | ObjAttr "=" ArrayOfBraces
+                          | ObjAttr "=" JunctionList
+                          | ObjAttr "=" DateTime 
+                          | ObjAttr "=" DateTime "to" DateTime;
   separator nonempty KeyVal ",";
 
 
@@ -710,11 +794,7 @@ An L4 statement is one of the following:
   <<l4-example1>>
   RULE 1 RuleOne NOOP
 
-  RULE 2 
-   DEEM Item.isEdiblePotato
-    AND Item.isTastyFood
-    WHEN Item.isPotato
-     AND Item.isEdible
+  <<l4-rules>>
 
   // the Prolog version of the above is:
   // isEdiblePotato(Item) :- isPotato(Item), isEdible(Item).
@@ -723,10 +803,6 @@ An L4 statement is one of the following:
   // the Flora-2 version of this would probably rely on the Item having properties
   //
 
-  
-  RULE 3 fertilize
-    DEEM Item.isPotato
-    WHEN Item.Species ~ ["Solanum tuberosum"]
 
   // Meng seems to be reinventing Haskell
   // let's call it HasSQL, haha
@@ -746,6 +822,8 @@ An L4 statement is one of the following:
   a list comprehension
 
   ,*/
+
+  <<l4entity>>
 
 #+end_src
 
@@ -1277,25 +1355,26 @@ Let's take a simple example. As in Typescript, we define an instance type for a 
 - human.fullname :: String
 - human.nationality :: Country
 
-Take Neta-Lee Hershlag. She was born in Israel in 1981; at least, that is what Wikipedia believes, as of the 10th of September 2020.
+Take Neta-Lee Hershlag. She was born in Israel in 1981; at least, that is what Wikipedia believes, as of the 10th of September 2020 when I wrote this.
 
 Guess what, though. She holds dual Israeli and American citizenship. Unusual, right? Most ontologies would only allow one citizenship to a person. Bit of a black swan. Let's use that as her codename.
 
 #+begin_src haskell :noweb-ref l4entity
   ENTITY blackSwan
      ISA Human
-    WITH birthdate   = [ { xtime: 2020-09-10, value: 1981-06-09 } ]
-         nationality = [ { xtime: 2020-09-10, value: IL, vtime: 1981-06-09 -- present }
-                       , { xtime: 2020-09-10, value: US                               } ]
+    WITH birthdate   = { xtime = 2020-09-10, value = 1981-06-09 }
+  //     a person can have multiple nationalities
+         nationality = [ { xtime = 2020-09-10, value = IL, vtime = 1981-06-09 to PRESENT }
+                       , { xtime = 2020-09-10, value = US                                } ]
 #+end_src
 
 We assume that her Israeli citizenship began at birth, but Wikipedia doesn't know when she became a US citizen; all we know is that as of September 10 2020, Wikipedia said she is one. So that citizenship value doesn't define a vtime.
 
-Let's not commit the usual [[https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/][falsehoods programmers believe about names]]. Can someone have multiple names! Sure, why not? Some people change their names when they get married; others when they switch genders; lots of variability. Sometimes people just have multiple names at the same time. Our Black Swan does too:
+Let's not commit the usual [[https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/][falsehoods programmers believe about names]]. Can someone have multiple names? Sure, why not? Some people change their names when they get married; others when they switch genders; lots of variability. Sometimes people just have multiple names at the same time. Our Black Swan does too:
 
 #+begin_src haskell :noweb-ref l4entity
-  -- someone can have multiple names too
-         fullname    = [ { xtime: 2020-09-10, value: ["Neta-Lee Hershlag", "Natalie Portman"] } ]
+  //     a person can have multiple names
+         fullname    = [ { xtime = 2020-09-10, value = ["Neta-Lee Hershlag", "Natalie Portman"] } ]
 #+end_src
 
 As you can see, the "multitemporal" syntax allows us to easily handle scenarios like:
@@ -1307,15 +1386,14 @@ As you can see, the "multitemporal" syntax allows us to easily handle scenarios 
 #+begin_src haskell :noweb-ref l4entity
   ENTITY celebXY
      ISA Couple
-    WITH [ { xtime: 2020-01-01, maritalStatus: dating  }
-         , { xtime: 2020-07-01, maritalStatus: married }
-         , { xtime: 2020-09-01, maritalStatus: married,  vtime: 2020-06-01 -- present }
-         , { xtime: 2020-12-01, maritalStatus: married,  vtime: 2020-06-01 -- 2020-11-01 }
-         , { xtime: 2020-12-01, maritalStatus: divorced, vtime: 2020-11-01 -- present    }
-         ]
+    WITH xtime = 2020-01-01, maritalStatus = dating
+         xtime = 2020-07-01, maritalStatus = married
+         xtime = 2020-09-01, maritalStatus = married,  vtime = 2020-06-01 to PRESENT
+         xtime = 2020-12-01, maritalStatus = married,  vtime = 2020-06-01 to 2020-11-01
+         xtime = 2020-12-01, maritalStatus = divorced, vtime = 2020-11-01 to PRESENT
 #+end_src
 
-The "transaction time" shows when the system know something; the "valid time" shows when some situation was the case. This allows one to compute "on this date, what did we know?"
+The "transaction time" shows when the system know something; the "valid time" shows when some situation was the case. This allows one to compute "on this date, what did we know? What was actually true?"
 
 **** Epistemics
 
@@ -1326,13 +1404,14 @@ An attribute may also be /epistemic/:
 - on October 1, Bob claimed to have actually received the notice on September 10, due to difficulties with the postal service.
 
 #+begin_src haskell :noweb-ref l4entity
-    KNOL alicePregnancy
-    WITH [ { xtime: 2020-08-01, knownBy: Alice,                            beliefs:                 { pregnancy: true }                        }
-         , { xtime: 2020-09-01,  toldBy: Alice,                            beliefs: { knownBy: Alice, pregnancy: true }  , toldTo: Bob         }
-         , { xtime: 2020-09-01, knownBy: Alice, beliefs: { knownBy: Bob,   beliefs: { knownBy: Alice, pregnancy: true } }, vtime: 2020-09-04 } }
-         , { xtime: 2020-10-01, knownBy:   Bob, beliefs: { knownBy: Alice, beliefs: { knownBy: Alice, pregnancy: true }  , vtime: 2020-09-01 }, vtime: 2020-09-10 }
-         ]
+  KNOL alicePregnancy
+    WITH xtime = 2020-08-01, knownBy = Alice,                              beliefs =                  { pregnancy = true }
+         xtime = 2020-09-01,  toldBy = Alice,                              beliefs = { knownBy = Alice, pregnancy = true }  , toldTo = Bob
+         xtime = 2020-09-01, knownBy = Alice, beliefs = { knownBy = Bob,   beliefs = { knownBy = Alice, pregnancy = true } }, vtime = 2020-09-04
+         xtime = 2020-10-01, knownBy =   Bob, beliefs = { knownBy = Alice, beliefs = { knownBy = Alice, pregnancy = true }  , vtime = 2020-09-01 }, vtime = 2020-09-10
 #+end_src
+
+There should be as many xtimes as there are knowers.
 
 *** Querying Objects and Attributes
 
@@ -1371,7 +1450,7 @@ We use the "ASOF" keyword to give all the attributes a default ~xtime~ (transact
          seller.consideration = [ item1, item2 ]
    WHERE item1 ISA  Item
                WITH category = "vegetable"
-                    species  = "Brassia oleracea"
+                    species  = "Brassica oleracea"
                     cultivar = "capitata"
 #+end_src
 
@@ -1384,15 +1463,15 @@ An alternative representation shows a trace of events:
      ISA Scenario
     ASOF 2020-09-10
     WITH parties      = [ blackSwan, veggieBar ]
-   TRACE 2020-09-01T12:10 blackSwan offers offerDetails
-         2020-09-01T12:11 veggieBar accepts offerDetails
-         2020-09-01T12:12 blackSwan pays veggieBar $10
-         2020-09-01T12:13 veggieBar delivers blackSwan [ item1, item2 ]
+         TRACE 2020-09-01T1210 blackSwan offers offerDetails
+               2020-09-01T1211 veggieBar accepts offerDetails
+               2020-09-01T1212 blackSwan pays veggieBar $10
+               2020-09-01T1213 veggieBar delivers blackSwan [ item1, item2 ]
    WHERE offerDetails = { blackSwan.consideration = $10
                         , veggieBar.consideration = [ item1, item2 ] }
          item1 ISA Item
                WITH category = "vegetable"
-                    species  = "Brassia oleracea"
+                    species  = "Brassica oleracea"
                     cultivar = "capitata"
                     quantity = 1
          item2 ISA Item
@@ -1410,95 +1489,142 @@ What you're about to read is basically a Horn clause. If you know Prolog, you wi
 
 Let's start with a super simple case.
 
-#+begin_src haskell :noweb yes :tangle myrando.hs
-
-  -- with :set +s, we see naive is O(2^n) while usingMax is O(n)
-
-  naive [x] = x
-  naive (x:xs) = if naive xs > x then naive xs else x
-
-  usingMax [x] = x
-  usingMax (x:xs) = max (usingMax xs) x
-
-  {-
-  λ: :set +s
-  λ: naive [1..14]
-  14
-  (0.03 secs, 2,236,728 bytes)
-  λ: naive [1..15]
-  15
-  (0.02 secs, 4,396,240 bytes)
-  λ: naive [1..16]
-  16
-  (0.02 secs, 8,721,688 bytes)
-  -}
-
-  naiveRight [x] = x
-  naiveRight (x:xs) = if x >= naiveRight xs then x else naiveRight xs
-
-
-
-  {-
-  λ: :set +s
-  λ: usingMax [1..15]
-  15
-  (0.02 secs, 75,944 bytes)
-  λ: usingMax [1..16]
-  16
-  (0.01 secs, 72,880 bytes)
-  -}
-
-  whereCached [x] = x
-  whereCached (x:xs) = if myrecursion > x then myrecursion else x
-      where myrecursion = whereCached xs
-
-  {-
-  λ: whereCached [1..14]
-  14
-  (0.01 secs, 73,136 bytes)
-  λ: whereCached [1..15]
-  15
-  (0.00 secs, 73,368 bytes)
-  λ: whereCached [1..16]
-  16
-  (0.01 secs, 73,600 bytes)
-  -}
-
-  letCached [x] = x
-  letCached (x:xs) = let myrecursion = letCached xs
-      in if myrecursion > x then myrecursion else x
-
-  {-
-  λ: letCached [1..14]
-  14
-  (0.00 secs, 73,136 bytes)
-  λ: letCached [1..15]
-  15
-  (0.00 secs, 73,368 bytes)
-  λ: letCached [1..16]
-  16
-  (0.01 secs, 73,600 bytes)
-  -}
-
-  tco [x]    y = if x > y then        x else        y
-  tco (x:xs) y = if x > y then tco xs x else tco xs y
-  
-  {-
-  λ: tco [1..14] 0
-  14
-  (0.00 secs, 73,576 bytes)
-  λ: tco [1..15] 0
-  15
-  (0.01 secs, 73,832 bytes)
-  λ: tco [1..16] 0
-  16
-  (0.01 secs, 74,088 bytes)
-  -}
-
-  tco2 [x]    y =          if x > y then x else y
-  tco2 (x:xs) y = tco2 xs (if x > y then x else y)
+#+begin_src haskell :noweb-ref l4entity
+  ENTITY spud1
+     ISA Item
+    WITH species = "Solanum tuberosum"
+         isEdible = true
 #+end_src
 
+This converts to Prolog:
+
+#+begin_src prolog
+  species(spud, "Solanum tuberosum").
+  isEdible(spud).
+#+end_src
+
+If we were converting to Flora-2 we would be more intelligent about classes and inheritance, but we're just trying to get our feet wet with logic programming, so we'll do that another time.
+
+Now we can run Rule2 on it.
+
+#+begin_src text :noweb-ref l4-rules
+  RULE 2 edible
+   DEEM Item.isEdiblePotato
+    AND Item.isTastyFood
+    WHEN Item.isPotato
+     AND Item.isEdible
+#+end_src
+
+Rule 2 relies on rule 3. This is backward chaining.
+  
+#+begin_src text :noweb-ref l4-rules
+  RULE 3 isPotato
+    DEEM Item.isPotato
+    WHEN Item.species ~ ["Solanum tuberosum" | "Mister Potatohead"]
+
+  // an OR-LIST expands to
+  // isPotato(Item) :- species(Item, "Solanum tuberosum"); species(Item, "Mister Potatohead").
+  //                                                     ^
+  // an AND-list would expand to
+  // isPotato(Item) :- species(Item, "Solanum tuberosum"), species(Item, "Mister Potatohead").
+  //                                                     ^
+#+end_src
+
+If this begins to feel weird, it's because under the hood, we're borrowing Prolog's unification and backtracking features.
+
+Suppose potatoes are so rare and prized that they come with certificates of provenance tracing the history of previous owners.
+
+#+begin_src haskell :noweb-ref l4-rules
+  ENTITY spud2
+     ISA Item
+    WITH species = "Solanum tuberosum"
+         isEdible = true
+         previousOwners = [ alice, bob, charlie, daryl ]
+#+end_src
+
+What does that look like in Prolog?
+
+#+begin_src prolog
+  species(spud2, "Solanum tuberosum").
+  isEdible(spud2).
+  previousOwner(spud2, alice).
+  previousOwner(spud2, bob).
+  previousOwner(spud2, charlie).
+  previousOwner(spud2, daryl).
+#+end_src
+
+Now we have an opportunity to explore relational syntax. Think Alloy.
+
+Let's say that some of the previous owners were members of the nobility.
+
+#+begin_src haskell :noweb-ref l4-rules
+  ENTITY alice   ISA Human WITH isNoble = true
+  ENTITY bob     ISA Human WITH isNoble = false
+  ENTITY charlie ISA Human WITH isNoble = true
+  ENTITY daryl   ISA Human WITH isNoble = false
+#+end_src
+
+In Prolog, that reads:
+
+#+begin_src prolog
+  isNoble(alice).
+  isNoble(bob).
+  isNoble(charlie).
+  isNoble(daryl).
+#+end_src
+
+Let's say a potato is Noble if at least two of its previous owners are Noble.
+
+There are a couple ways to say that. This is one way:
+
+#+begin_src haskell :noweb-ref l4-rules
+
+  RULE noblePotato
+    DEEM Item.isNoble
+    WHEN Item.isPotato
+     AND Item.previousOwners.First.isNoble
+     AND Item.previousOwners.Second.isNoble
+#+end_src
+
+That translates to:
+
+#+begin_src prolog
+  isNoble(Item) :- isPotato(Item),
+                   previousOwner(Item, First), isNoble(First),
+                   previousOwner(Item, Second), isNoble(Second),
+                   First != Second.
+#+end_src
+
+BTW, we can do subclassing like this:
+
+#+begin_src haskell :noweb-ref l4-rules
+  RULE isPotato
+    DEEM Item
+    TOBE Potato
+    WHEN Item.isPotato
+#+end_src
+
+Note that this syntax inverts the usual direction of DEEMing used elsewhere -- Potato extends Item.
+
+(Maybe this also creates an automatic Item.isPotato?)
+
+This allows us to subsequently use the term Potato instead of Item:
+
+#+begin_src haskell :noweb-ref l4-rules
+  RULE noblePotato2
+    DEEM Potato.isNoble
+    WHEN Potato.previousOwners.*.isNoble >= 2
+#+end_src
+
+Alternative syntax:
+
+#+begin_src haskell :noweb-ref l4-rules
+  RULE noblePotato3
+    DEEM Potato.isNoble
+    WHEN Potato.previousOwners.[Owner1,Owner2].isNoble
+#+end_src
+
+*** Library: ContractLaw
 
 
 #+begin_src haskell :noweb yes :tangle ContractLaw.l4
@@ -1512,31 +1638,18 @@ Let's start with a super simple case.
          , ! @ T2 party.Offeror  withdraws O, T1 <= T2 <= T3
          , ! @ T2 party.Acceptor declines  O, T1 <= T2 <= T3
                   -- Note: Acceptor may unify to multiple values, since cardinality of parties can be 3 or more
-         , not scenario.party.[Offeror].withdrawsOffer(O) (@@ T2 > T1, T2 < T3)
-         , scenario.party.[Offeror].promises(.Consideration)
-         & scenario.party.[Acceptor].promises(.Consideration)
+         , O.Offeror.Consideration
+         & O.Acceptor.Consideration
          ]
-   WHERE [ Offeror.Consideration & Acceptor.Consideration ] <&> [ [ isPromiseToRefrain | hasValue ] & not isPast ]
+   WHERE [ O.Offeror.Consideration & O.Acceptor.Consideration ] <&> [ [ isPromiseToRefrain | hasValue ] & not isPast ]
 #+end_src
 
 Some unspoken rules are at play:
-- disjoint rule :: Acceptor /= Offeror because any match is automatically narrowed to be disjoint with any previous matches of the same shape, unless there is a WHERE expression that explicitly broadens the match
+- disjoint rule :: Acceptor /= Offeror because any match is automatically narrowed to be disjoint with any previous matches of the same shape, unless there is a WHERE expression that explicitly broadens the match to allow X to be Y
 - with GIVEN :: namespaces of the GIVEN parameters are available in scope for the rest of the rule
 - singular / plural unification :: .parties and .party are automatically the same object
 
-If this begins to feel weird, it's because under the hood, we're borrowing Prolog's unification and backtracking features.
-
-Suppose a WHEN clause says ~object.MyAttr.isTrue~.
-
-In a logic programming language that expression is synonymous with
-
-~isTrue(object.MyAttr)~
-
-~MyAttr~ takes on every attribute of ~object~ which is true
-
-Within an ~object.[ ]~ attribute dereference, the following aliases exist:
-- ALL :: unifies with every attribute
-- ALL - PreviouslyUnified :: 
+We may want to express that a counteroffer implies a decline.
 
 *** Ontology
 

@@ -9,26 +9,58 @@ comment "//" ;
 comment "/*" "*/" ;
 rules Pragma ::= "pragma" [KeyVal] ;
 Import. Import ::= "import" ObjAttr ;
-Entity.    Entity    ::= "ENTITY" Ident
-                         "ISA"   UIdent
+Entity.    Entity    ::= "ENTITY" ObjAttr
+                         "ISA"    ObjAttr
                          Asof
-                         "WITH"  [WithKeyVal]
+                         WithExpr
+                         WhereExpr;
 
-layout "WITH" ;
-separator WithKeyVal ";" ;
+With.      WithExpr  ::= "WITH" "{" [WithIn] "}";
+rules      WithIn    ::= EqList | TraceExpr;
+separator nonempty WithIn ";";
 
-rules  WithKeyVal ::= ObjAttr "=" JunctionList
-                    | ObjAttr "=" BraceList
-                    | ObjAttr "=" String
-                    | ObjAttr "=" ObjAttr ;
+rules      TraceExpr ::= "TRACE" "{" [LogEvent] "}";
+rules      LogEvent ::= Iso8601 ObjAttr ObjAttr ObjAttr BlahBlah ;
+separator nonempty LogEvent ";";
+separator nonempty Blah "";
+rules      BlahBlah ::= [Blah] | ;
+rules      Blah     ::= Numberlike | ObjAttr | JunctionList | BraceList;
+
+layout "WITH", "TRACE", "WHERE" ;
+separator nonempty EqList ";" ;
+
+rules     WhereExpr ::= | "WHERE" "{" [WhereIn] "}" ;
+rules     WhereIn   ::= ObjAttr "ISA" ObjAttr 
+                      | ObjAttr "ISA" ObjAttr WithExpr
+                      | EqList;
+separator nonempty WhereIn ";";
+
+EqList.      EqList ::= [KeyVal];
+
+rules      UIdentList ::= [UIdentElem];
+rules      UIdentElem ::= UIdent;
+separator nonempty UIdentElem ".";
+
+token UIdent (upper (letter | digit | '_')*) ;
 
 rules BraceList ::= "{" [KeyVal] "}" ;
+rules ArrayOfBraces ::= "[" [BraceList] "]";
+separator nonempty BraceList "," ;
+
+Knol.       Knol     ::= "KNOL" ObjAttr WithExpr;
+Asof.      Asof      ::= "ASOF" DateTime ;
+AsofNull.  Asof      ::= ;
+rules      DateTime  ::= Iso8601 | "PRESENT" | "NOW" ;
+rules      Iso8601   ::= YYYYMMDD | YYYYMMDDTHHMM;
+
+token YYYYMMDD      ( digit digit digit digit '-'? digit digit '-'? digit digit );
+token YYYYMMDDTHHMM ( digit digit digit digit '-'? digit digit '-'? digit digit 'T' digit digit digit digit );
 
 rules      RuleDef   ::= RuleNum | RuleID | RuleName
                        | RuleNum   RuleID 
                        | RuleNum            RuleName
                        |           RuleID   RuleName ;
-RID.       RuleID    ::= Ident ;
+rules      RuleID    ::= ObjAttr ;
 RName.     RuleName  ::= LangStrings ;
 RNum.      RuleNum   ::= Integer;
 
@@ -38,17 +70,26 @@ RBNoop.    RuleBody  ::= "NOOP";
 
 -- DEEM Item.isPotato AND Item.isVegetable WHEN ...
 RBDeem.    RuleBody  ::= "DEEM" [ObjAttrAnd] "WHEN" PredExpr;
+RBTOBE.    RuleBody  ::= "DEEM" ObjAttr "TOBE" ObjAttr "WHEN" PredExpr;
 separator nonempty ObjAttrAnd "AND";
 ObjAttrAnd1. ObjAttrAnd ::= ObjAttr ;
 
 -- ... WHEN  
-PEOA.      PredExpr  ::= ObjAttr;
+PEUnify.   PredExpr  ::= UnifyExpr;
 PEAnd.     PredExpr  ::= PredExpr "AND" PredExpr;
 PEOr.      PredExpr  ::= PredExpr "OR"  PredExpr;
 PEME.      PredExpr1 ::= MatchExpr;
 _.         PredExpr2 ::= "(" PredExpr ")";
 coercions PredExpr 2;
 -- do we really need to say coercions?
+
+rules      UnifyExpr ::= [UnifyElem];
+rules      UnifyElem ::= ObjAttrElem
+                      |  UnifyBracket
+                      |  UnifyStar;
+separator nonempty UnifyElem ".";
+rules      UnifyStar ::= "*" ;
+rules      UnifyBracket ::= "[" CommaList "]" ;
 
 rules      FancyBoolOp ::= PlainBoolOp Likelihood;
 
@@ -57,9 +98,17 @@ rules      PlainBoolOp ::= "AND" | "OR" ;
 rules      Likelihood  ::= "" | "LIKELY" | "UNLIKELY";
 
 -- need more cases -- junctionlists
-ME_OA_JL.  MatchExpr  ::= ObjAttr "~" JunctionList ;
+ME_OA_JL.  MatchExpr  ::= UnifyExpr "~" JunctionList ;
+ME_OA_Bin. MatchExpr  ::= UnifyExpr BinOp Numberlike ;
 ME_True.   MatchExpr  ::= "True";
 ME_False.  MatchExpr  ::= "False";
+
+rules      BinOp      ::= "+" | "-" | "*" | "/" | "<" | ">" | "<=" | ">=" | "==";
+
+rules      Numeric    ::= Integer | Double ;
+
+rules      Numberlike   ::= "$" Numeric
+                          | Numeric ;
 
 JL_And.    JunctionList ::= "["   AndList "]" ;
 JL_Or.     JunctionList ::= "["    OrList "]" ;
@@ -85,14 +134,21 @@ OrList.    OrList ::= [OrElem];
 rules      OrElem ::= ObjAttr | String;
 separator nonempty OrElem "|";
 
-rules      ObjAttrElem  ::= Ident ;                     -- Foo
+rules      ObjAttrElem  ::= Ident | UIdent ;            -- Foo
 
 OA_dots.   ObjAttr      ::= [ObjAttrElem];              -- Foo.Bar.Baz
 OA_method. ObjAttr      ::= ObjAttr "(" CommaList ")" ; -- Foo.Bar(Baz, Quux)
 separator nonempty ObjAttrElem ".";
 
 rules      KeyVal     ::= ObjAttr ":" ObjAttr
-                        | ObjAttr "=" ObjAttr ;
+                        | ObjAttr "=" ObjAttr
+                        | ObjAttr "=" String
+                        | ObjAttr "=" Numberlike
+                        | ObjAttr "=" BraceList
+                        | ObjAttr "=" ArrayOfBraces
+                        | ObjAttr "=" JunctionList
+                        | ObjAttr "=" DateTime 
+                        | ObjAttr "=" DateTime "to" DateTime;
 separator nonempty KeyVal ",";
 
 
