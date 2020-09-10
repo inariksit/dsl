@@ -573,21 +573,7 @@ C-style and Javascript-style comments are both supported.
 Suppose we have a ContractLaw library:
 
 #+begin_src haskell :noweb yes :tangle ContractLaw.l4
-module ContractLaw where
-
-RULE 1 elements
-  :en: "Elements of a Contract"
- GIVEN scenario
-  DEEM scenario.hasContract
-  WHEN [ scenario.parties >= 2
-       , scenario.party.[Offeror].makesOffer(O) (@@ T1)
-       , scenario.party.[Acceptor @ ALL - Offeror].acceptsOffer(O) (@@ T3 > T1)
-                -- Note: Acceptor may unify to multiple values, since cardinality of parties can be 3 or more
-       , not scenario.party.[Offeror].withdrawsOffer(O) (@@ T2 > T1, T2 < T3)
-       , scenario.party.[Offeror].promises(.Consideration)
-       & scenario.party.[Acceptor].promises(.Consideration)
-       ]
- WHERE [ Offeror.Consideration & Acceptor.Consideration ] <&> [ [ isPromiseToRefrain | hasValue ] & not isPast ]
+  module ContractLaw where
 #+end_src
 
 Other modules are welcome to import this module. They would end up with ~elements~ in the namespace, explicitly referenceable as ContractLaw.Rule.1
@@ -637,6 +623,7 @@ An L4 statement is one of the following:
                       | ObjAttr "=" ObjAttr ;
 
   rules BraceList ::= "{" [KeyVal] "}" ;
+#+end_src
 
 **** A Rule Statement
 
@@ -1388,7 +1375,154 @@ We use the "ASOF" keyword to give all the attributes a default ~xtime~ (transact
                     cultivar = "capitata"
 #+end_src
 
+The ContractOfSale is a library class which abstracts the essential elements of a particular contract.
+
+An alternative representation shows a trace of events:
+
+#+begin_src haskell :noweb-ref l4entity
+  ENTITY genericContract
+     ISA Scenario
+    ASOF 2020-09-10
+    WITH parties      = [ blackSwan, veggieBar ]
+   TRACE 2020-09-01T12:10 blackSwan offers offerDetails
+         2020-09-01T12:11 veggieBar accepts offerDetails
+         2020-09-01T12:12 blackSwan pays veggieBar $10
+         2020-09-01T12:13 veggieBar delivers blackSwan [ item1, item2 ]
+   WHERE offerDetails = { blackSwan.consideration = $10
+                        , veggieBar.consideration = [ item1, item2 ] }
+         item1 ISA Item
+               WITH category = "vegetable"
+                    species  = "Brassia oleracea"
+                    cultivar = "capitata"
+                    quantity = 1
+         item2 ISA Item
+               WITH category = "beverage"
+                    brand    = "Acme Water"
+                    model    = "750mL"
+                    quantity = 1
+#+end_src
+
+from which a pattern-matcher could deem that a legal contract was in place. Let's see what that looks like:
+
 **** Matching Object Attributes
+
+What you're about to read is basically a Horn clause. If you know Prolog, you will recognize that this is Prolog, dressed in the guise of an object-like paradigm. You might even say, "this has the same F-Logic as Flora-2", except with the syntax of SQL.
+
+Let's start with a super simple case.
+
+#+begin_src haskell :noweb yes :tangle myrando.hs
+
+  -- with :set +s, we see naive is O(2^n) while usingMax is O(n)
+
+  naive [x] = x
+  naive (x:xs) = if naive xs > x then naive xs else x
+
+  usingMax [x] = x
+  usingMax (x:xs) = max (usingMax xs) x
+
+  {-
+  λ: :set +s
+  λ: naive [1..14]
+  14
+  (0.03 secs, 2,236,728 bytes)
+  λ: naive [1..15]
+  15
+  (0.02 secs, 4,396,240 bytes)
+  λ: naive [1..16]
+  16
+  (0.02 secs, 8,721,688 bytes)
+  -}
+
+  naiveRight [x] = x
+  naiveRight (x:xs) = if x >= naiveRight xs then x else naiveRight xs
+
+
+
+  {-
+  λ: :set +s
+  λ: usingMax [1..15]
+  15
+  (0.02 secs, 75,944 bytes)
+  λ: usingMax [1..16]
+  16
+  (0.01 secs, 72,880 bytes)
+  -}
+
+  whereCached [x] = x
+  whereCached (x:xs) = if myrecursion > x then myrecursion else x
+      where myrecursion = whereCached xs
+
+  {-
+  λ: whereCached [1..14]
+  14
+  (0.01 secs, 73,136 bytes)
+  λ: whereCached [1..15]
+  15
+  (0.00 secs, 73,368 bytes)
+  λ: whereCached [1..16]
+  16
+  (0.01 secs, 73,600 bytes)
+  -}
+
+  letCached [x] = x
+  letCached (x:xs) = let myrecursion = letCached xs
+      in if myrecursion > x then myrecursion else x
+
+  {-
+  λ: letCached [1..14]
+  14
+  (0.00 secs, 73,136 bytes)
+  λ: letCached [1..15]
+  15
+  (0.00 secs, 73,368 bytes)
+  λ: letCached [1..16]
+  16
+  (0.01 secs, 73,600 bytes)
+  -}
+
+  tco [x]    y = if x > y then        x else        y
+  tco (x:xs) y = if x > y then tco xs x else tco xs y
+  
+  {-
+  λ: tco [1..14] 0
+  14
+  (0.00 secs, 73,576 bytes)
+  λ: tco [1..15] 0
+  15
+  (0.01 secs, 73,832 bytes)
+  λ: tco [1..16] 0
+  16
+  (0.01 secs, 74,088 bytes)
+  -}
+
+  tco2 [x]    y =          if x > y then x else y
+  tco2 (x:xs) y = tco2 xs (if x > y then x else y)
+#+end_src
+
+
+
+#+begin_src haskell :noweb yes :tangle ContractLaw.l4
+  RULE 1 elements
+    :en: "Elements of a Contract"
+   GIVEN scenario
+    DEEM scenario.hasContract
+    WHEN [ parties >= 2
+         ,   @ T1 party.Offeror  offers    O
+         ,   @ T3 party.Acceptor accepts   O, T1 <= T3
+         , ! @ T2 party.Offeror  withdraws O, T1 <= T2 <= T3
+         , ! @ T2 party.Acceptor declines  O, T1 <= T2 <= T3
+                  -- Note: Acceptor may unify to multiple values, since cardinality of parties can be 3 or more
+         , not scenario.party.[Offeror].withdrawsOffer(O) (@@ T2 > T1, T2 < T3)
+         , scenario.party.[Offeror].promises(.Consideration)
+         & scenario.party.[Acceptor].promises(.Consideration)
+         ]
+   WHERE [ Offeror.Consideration & Acceptor.Consideration ] <&> [ [ isPromiseToRefrain | hasValue ] & not isPast ]
+#+end_src
+
+Some unspoken rules are at play:
+- disjoint rule :: Acceptor /= Offeror because any match is automatically narrowed to be disjoint with any previous matches of the same shape, unless there is a WHERE expression that explicitly broadens the match
+- with GIVEN :: namespaces of the GIVEN parameters are available in scope for the rest of the rule
+- singular / plural unification :: .parties and .party are automatically the same object
 
 If this begins to feel weird, it's because under the hood, we're borrowing Prolog's unification and backtracking features.
 

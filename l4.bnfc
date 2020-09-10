@@ -1,6 +1,6 @@
 ModuleDecl. Module ::= "module" ObjAttr "where";
 Toplevel.  Rules ::= [Toplevels];
-rules      Toplevels ::= Rule | Module | Import | Pragma ;
+rules      Toplevels ::= Rule | Module | Import | Pragma | Entity | Knol ;
 terminator Toplevels ";";
 
 layout toplevel;
@@ -9,6 +9,21 @@ comment "//" ;
 comment "/*" "*/" ;
 rules Pragma ::= "pragma" [KeyVal] ;
 Import. Import ::= "import" ObjAttr ;
+Entity.    Entity    ::= "ENTITY" Ident
+                         "ISA"   UIdent
+                         Asof
+                         "WITH"  [WithKeyVal]
+
+layout "WITH" ;
+separator WithKeyVal ";" ;
+
+rules  WithKeyVal ::= ObjAttr "=" JunctionList
+                    | ObjAttr "=" BraceList
+                    | ObjAttr "=" String
+                    | ObjAttr "=" ObjAttr ;
+
+rules BraceList ::= "{" [KeyVal] "}" ;
+
 rules      RuleDef   ::= RuleNum | RuleID | RuleName
                        | RuleNum   RuleID 
                        | RuleNum            RuleName
