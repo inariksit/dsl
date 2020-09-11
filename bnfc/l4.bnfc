@@ -6,6 +6,7 @@ terminator Toplevels ";";
 layout toplevel;
 entrypoints Rules;
 comment "//" ;
+comment "--" ;
 comment "/*" "*/" ;
 rules Pragma ::= "pragma" [KeyVal] ;
 Import. Import ::= "import" ObjAttr ;

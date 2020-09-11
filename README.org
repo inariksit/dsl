@@ -627,10 +627,11 @@ An L4 Module contains a list of directives and statements.
   entrypoints Rules;
 #+end_src
 
-C-style and Javascript-style comments are both supported.
+C-style and Javascript-style comments are both supported. Also Haskell-style, as a nod to our heritage.
 
 #+begin_src bnfc :noweb-ref l4rules
     comment "//" ;
+    comment "--" ;
     comment "/*" "*/" ;
 #+end_src
 
@@ -1366,6 +1367,8 @@ This is why it's dangerous to reuse words with a rich existing history -- at som
 
 First-order logic knows how to deal with this situation. That's why we have \exists and \forall.
 
+See also https://inariksit.github.io/cclaw-zettelkasten/ambiguity_of_and.html
+
 **** Namespace Attributes
 
 ***** Automatic singular / plural support
@@ -1475,7 +1478,7 @@ Specific individuals are lowercase, like blackSwan, or celebXY.
 
 Interfaces, or classes, start with an uppercase letter, like Human or Couple.
 
-Knols are belief structures, and have special attributes ~knownBy~, ~toldBy~, ~toldTo~, and ~beliefs~ attributes.
+Knols are belief structures, and have special attributes ~knownBy~, ~toldBy~, ~toldTo~, and ~beliefs~ attributes. This may go away at some point.
 
 We use the "ASOF" keyword to give all the attributes a default ~xtime~ (transaction time). If it is omitted, it defaults to the execution time.
 
@@ -1501,7 +1504,7 @@ We use the "ASOF" keyword to give all the attributes a default ~xtime~ (transact
                     cultivar = "capitata"
 #+end_src
 
-The ContractOfSale is a library class which abstracts the essential elements of a particular contract.
+ContractLaw is a library class which abstracts the essential elements of a particular contract.
 
 An alternative representation shows a trace of events:
 
@@ -1510,10 +1513,10 @@ An alternative representation shows a trace of events:
      ISA Scenario
     ASOF 2020-09-10
     WITH parties      = [ blackSwan, veggieBar ]
-         TRACE 2020-09-01T1210 blackSwan offers offerDetails
-               2020-09-01T1211 veggieBar accepts offerDetails
-               2020-09-01T1212 blackSwan pays veggieBar $10
-               2020-09-01T1213 veggieBar delivers blackSwan [ item1, item2 ]
+         TRACE 2020-09-01T1210 blackSwan offers     offerDetails
+               2020-09-01T1211 veggieBar accepts    offerDetails
+               2020-09-01T1212 blackSwan pays       veggieBar $10
+               2020-09-01T1213 veggieBar deliversTo blackSwan [ item1, item2 ]
    WHERE offerDetails = { blackSwan.consideration = $10
                         , veggieBar.consideration = [ item1, item2 ] }
          item1 ISA Item
@@ -1750,7 +1753,7 @@ $ ghcid --command "stack ghci" ./mkProlog.hs
 
 * Output
 
-#+begin_src bnfc :noweb yes :tangle bnfc/src/l4.bnfc
+#+begin_src bnfc :noweb yes :tangle bnfc/l4.bnfc
 <<l4rules>>
 <<l4expressions>>
 #+end_src

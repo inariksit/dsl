@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a52a306e4fbe943555c7c72bc6561e49513d96891020da8a8fec9bb5de93efcd
+-- hash: 47b8984eccef4262eff13d1b87b81356236ae7fd4e4b5368900c0f0016b6d450
 
 name:           bnfc
 version:        0.1.0.0
@@ -18,7 +18,6 @@ license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
-    README.md
     ChangeLog.md
 
 source-repository head
@@ -31,7 +30,6 @@ library
       ErrM
       LayoutL
       LexL
-      Lib
       ParL
       PrintL
       SkelL

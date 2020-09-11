@@ -3,3 +3,134 @@ module Foo.Bar.Baz where
 import ContractLaw
 
 RULE 1 RuleOne :en:"First Rule" NOOP
+RULE 2 edible
+ DEEM Item.isEdiblePotato
+  AND Item.isTastyFood
+  WHEN Item.isPotato
+   AND Item.isEdible
+RULE 3 isPotato
+  DEEM Item.isPotato
+  WHEN Item.species ~ ["Solanum tuberosum" | "Mister Potatohead"]
+
+// an OR-LIST expands to
+// isPotato(Item) :- species(Item, "Solanum tuberosum"); species(Item, "Mister Potatohead").
+//                                                     ^
+// an AND-list would expand to
+// isPotato(Item) :- species(Item, "Solanum tuberosum"), species(Item, "Mister Potatohead").
+//                                                     ^
+ENTITY spud2
+   ISA Item
+  WITH species = "Solanum tuberosum"
+       isEdible = true
+       previousOwners = [ alice, bob, charlie, daryl ]
+ENTITY alice   ISA Human WITH isNoble = true
+ENTITY bob     ISA Human WITH isNoble = false
+ENTITY charlie ISA Human WITH isNoble = true
+ENTITY daryl   ISA Human WITH isNoble = false
+
+RULE noblePotato
+  DEEM Item.isNoble
+  WHEN Item.isPotato
+   AND Item.previousOwners.First.isNoble
+   AND Item.previousOwners.Second.isNoble
+RULE isPotato
+  DEEM Item
+  TOBE Potato
+  WHEN Item.isPotato
+RULE noblePotato2
+  DEEM Potato.isNoble
+  WHEN Potato.previousOwners.*.isNoble >= 2
+RULE noblePotato3
+  DEEM Potato.isNoble
+  WHEN Potato.previousOwners.[Owner1,Owner2].isNoble
+
+// the Prolog version of the above is:
+// isEdiblePotato(Item) :- isPotato(Item), isEdible(Item).
+// isTastyFood(Item)    :- isPotato(Item), isEdible(Item).
+//
+// the Flora-2 version of this would probably rely on the Item having properties
+//
+
+
+// Meng seems to be reinventing Haskell
+// let's call it HasSQL, haha
+
+/* like, for example ...
+
+append "poo" forEach [Foo, Bar, Baz]
+
+is equivalent to, in some other languages,
+
+    [Foo, Bar, Baz].map(x=>x+"poo")
+or
+    (++ "poo") <$> [foo, bar, baz]
+
+so we can sneak that in to our language too, just with lots of
+syntactic sugar so the "business developers" don't notice we're doing
+a list comprehension
+
+*/
+
+ENTITY blackSwan
+   ISA Human
+  WITH birthdate   = { xtime = 2020-09-10, value = 1981-06-09 }
+//     a person can have multiple nationalities
+       nationality = [ { xtime = 2020-09-10, value = IL, vtime = 1981-06-09 to PRESENT }
+                     , { xtime = 2020-09-10, value = US                                } ]
+//     a person can have multiple names
+       fullname    = [ { xtime = 2020-09-10, value = ["Neta-Lee Hershlag", "Natalie Portman"] } ]
+ENTITY celebXY
+   ISA Couple
+  WITH xtime = 2020-01-01, maritalStatus = dating
+       xtime = 2020-07-01, maritalStatus = married
+       xtime = 2020-09-01, maritalStatus = married,  vtime = 2020-06-01 to PRESENT
+       xtime = 2020-12-01, maritalStatus = married,  vtime = 2020-06-01 to 2020-11-01
+       xtime = 2020-12-01, maritalStatus = divorced, vtime = 2020-11-01 to PRESENT
+KNOL alicePregnancy
+  WITH xtime = 2020-08-01, knownBy = Alice,                              beliefs =                  { pregnancy = true }
+       xtime = 2020-09-01,  toldBy = Alice,                              beliefs = { knownBy = Alice, pregnancy = true }  , toldTo = Bob
+       xtime = 2020-09-01, knownBy = Alice, beliefs = { knownBy = Bob,   beliefs = { knownBy = Alice, pregnancy = true } }, vtime = 2020-09-04
+       xtime = 2020-10-01, knownBy =   Bob, beliefs = { knownBy = Alice, beliefs = { knownBy = Alice, pregnancy = true }  , vtime = 2020-09-01 }, vtime = 2020-09-10
+ENTITY veggieBar
+   ISA Business
+  WITH address = [ "1 Veggie Way" ]
+       id      = { idtype = "UEN", idval = "202000000A" }
+       name    = "The Veggie Bar Pte. Ltd."
+
+ENTITY buyCabbage
+   ISA ContractOfSale
+  ASOF 2020-09-10
+  WITH date         = 2020-09-10
+       jurisdiction = SG
+       buyer        = blackSwan
+       seller       = veggieBar
+       buyer.consideration = $10
+       seller.consideration = [ item1, item2 ]
+ WHERE item1 ISA  Item
+             WITH category = "vegetable"
+                  species  = "Brassica oleracea"
+                  cultivar = "capitata"
+ENTITY genericContract
+   ISA Scenario
+  ASOF 2020-09-10
+  WITH parties      = [ blackSwan, veggieBar ]
+       TRACE 2020-09-01T1210 blackSwan offers     offerDetails
+             2020-09-01T1211 veggieBar accepts    offerDetails
+             2020-09-01T1212 blackSwan pays       veggieBar $10
+             2020-09-01T1213 veggieBar deliversTo blackSwan [ item1, item2 ]
+ WHERE offerDetails = { blackSwan.consideration = $10
+                      , veggieBar.consideration = [ item1, item2 ] }
+       item1 ISA Item
+             WITH category = "vegetable"
+                  species  = "Brassica oleracea"
+                  cultivar = "capitata"
+                  quantity = 1
+       item2 ISA Item
+             WITH category = "beverage"
+                  brand    = "Acme Water"
+                  model    = "750mL"
+                  quantity = 1
+ENTITY spud1
+   ISA Item
+  WITH species = "Solanum tuberosum"
+       isEdible = true
