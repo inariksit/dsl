@@ -1,5 +1,8 @@
 
-all : out/test1.out
+all : srcdoc out/test1.out
+
+srcdoc : src doc
+	mkdir -p src doc
 
 out/test1.out : l4/test1.l4 src/AbsL.hs
 	stack exec l4 l4/test1.l4 > out/test1.out
