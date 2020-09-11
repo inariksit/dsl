@@ -1743,11 +1743,19 @@ The usual:
 
 * Developers Guide
 
+** Install and Quickstart
 #+begin_src sh
-$ stack install pretty-simple
+$ cd bnfc; fswatch -o ../README.org make | perl -nle 'system("clear; date; make")'
+#+end_src
 
-$ fswatch -o Makefile l4.bnfc test1.l4 TestL.hs mkProlog.hs | perl -nle 'system("clear; make")'
+This launches a new Emacs to tangle the source files from the README.
 
+Then it builds the L4 interpreter from scratch.
+
+Then it parses the sample L4 code into out/test1.out
+
+** Other Things you can Do
+#+begin_src sh
 $ ghcid --command "stack ghci" ./mkProlog.hs
 #+end_src
 
