@@ -59,7 +59,8 @@ token YYYYMMDDTHHMM ( digit digit digit digit '-'? digit digit '-'? digit digit 
 rules      RuleDef   ::= RuleNum | RuleID | RuleName
                        | RuleNum   RuleID 
                        | RuleNum            RuleName
-                       |           RuleID   RuleName ;
+                       |           RuleID   RuleName
+                       | RuleNum   RuleID   RuleName ;
 rules      RuleID    ::= ObjAttr ;
 RName.     RuleName  ::= LangStrings ;
 RNum.      RuleNum   ::= Integer;
@@ -155,6 +156,7 @@ separator nonempty KeyVal ",";
 EString.      NormalString ::= String ;
 ELangStrings. LangStrings  ::= [LangString] ;
     separator nonempty LangString " ";
-ELangString.  LangString   ::= [LangID] ":" NormalString ;
-ELangID.      LangID       ::= Ident ;
+ELangString.  LangString   ::= LangLabel NormalString ;
+rules         LangID       ::= ":" Ident ":";
+token         LangLabel  ( ':' letter+ ('_' letter+)? ':') ;
     separator nonempty LangID "," ;
