@@ -1,7 +1,7 @@
 
 all : srcdoc out/test1.out
 
-srcdoc : src doc
+srcdoc :
 	mkdir -p src doc
 
 out/test1.out : l4/test1.l4 src/AbsL.hs
@@ -15,5 +15,6 @@ src/AbsL.hs : l4.bnfc
 l4/test1.l4 l4.bnfc : ../README.org
 	emacs --batch --eval "(require 'org)" --eval '(org-babel-tangle-file "../README.org")'
 
+.PHONY: clean all srcdoc
 clean :
 	rm out/* src/* l4/* prolog/*
