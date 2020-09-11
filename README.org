@@ -1743,6 +1743,17 @@ The usual:
 
 * Developers Guide
 
+** Requirements
+
+The following command line packages need to be runnable from your shell.
+
+- bnfc
+- alex
+- happy
+- haskell stack
+- emacs
+  - org-mode
+
 ** Install and Quickstart
 #+begin_src sh
 $ cd bnfc; fswatch -o ../README.org make | perl -nle 'system("clear; date; make")'
