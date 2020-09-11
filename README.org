@@ -1755,8 +1755,16 @@ The following command line packages need to be runnable from your shell.
   - org-mode
 
 ** Install and Quickstart
+
+If you're running the system for the first time, stack will take some time to install ghc.
+
 #+begin_src sh
-$ cd bnfc; fswatch -o ../README.org make | perl -nle 'system("clear; date; make")'
+$ cd bnfc; make
+#+end_src
+
+If you're editing the README.org, you can run this to re-make every time you hit save.
+#+begin_src sh
+$ cd bnfc; fswatch -o ../README.org | perl -nle 'system("clear; date; make")'
 #+end_src
 
 This launches a new Emacs to tangle the source files from the README.
