@@ -34,9 +34,8 @@ usage = do
   putStrLn "showbug test1.l4 out/test1.out out/test1.err"
       
 getErrorCoordinates inlines = do
-  mt <- matchedText (flip (?=~) syntaxError (unlines inlines))
-  let ms = matches $ mt *=~ [re|\d+|]
-  case ms of
+  mt <- matchedText $ unlines inlines ?=~ syntaxError
+  case matches $ mt *=~ [re|\d+|] of
     [x,y] -> return (read x, read y, mt)
     otherwise -> Nothing
   where
