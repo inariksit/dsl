@@ -1057,23 +1057,28 @@ END SCOPE This_SAFE
 EString.      NormalString ::= String ;
 ELangStrings. LangStrings  ::= [LangString] ;
     separator nonempty LangString " ";
-ELangString.  LangString   ::= LangLabel NormalString ;
-rules         LangID       ::= ":" Ident ":";
-token         LangLabel  ( ':' letter+ ('_' letter+)? ':') ;
-    separator nonempty LangID "," ;
+ELangString.  LangString   ::= LangID NormalString ;
+rules         LangID       ::= ":" [LangLabel] ":";
+rules         LangLabel    ::= Ident ;
+    separator nonempty LangLabel "," ;
 #+end_src
 
 **** String
 
-A normal string looks ="like this"= and obeys the usual conventions around escaped backslashes, quotes, and newlines.
+A normal string looks ~"like this"~ and obeys the usual conventions around escaped backslashes, quotes, and newlines.
 
 **** Language String
 
-A language string is a normal string prefixed with a language ID prefix.
+A language string is a normal string prefixed with a language ID prefix. Any place you can have one language string, you can have more:
+
+#+begin_example
+:en:"potato"
+:fr:"pomme de terre"
+#+end_example
 
 **** Language Identifiers
 
-A language ID prefix is one or more Langauge
+A language ID prefix is one or more comma-separated ISO639-1 language codes, where dashes and underscores are accepted.
 
 **** Language Stringset
 
@@ -1536,7 +1541,7 @@ from which a pattern-matcher could deem that a legal contract was in place. Let'
 **** Natural Language Generation
 
 #+begin_src text :noweb-ref l4-rules
-  RULE 1 RuleOne :en:"First Rule" NOOP
+  RULE 1 ruleOne :en:"First Rule" NOOP
 #+end_src
 
 What should this say in English?

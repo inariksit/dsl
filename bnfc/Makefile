@@ -5,7 +5,7 @@ subdirs :
 	mkdir -p src l4 out
 
 out/test1.out : l4/test1.l4 src/AbsL.hs
-	stack exec l4 l4/test1.l4 > out/test1.out
+	stack exec l4 l4/test1.l4 > out/test1.out 2> out/test1.err || stack exec showbug l4/test1.l4 out/test1.out out/test1.err
 	cat out/test1.out
 
 src/AbsL.hs : l4.bnfc

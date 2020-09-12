@@ -2,7 +2,7 @@
 module Foo.Bar.Baz where
 import ContractLaw
 
-RULE 1 RuleOne :en:"First Rule" NOOP
+RULE 1 ruleOne :en:"First Rule" NOOP
 RULE 2 edible
  DEEM Item.isEdiblePotato
   AND Item.isTastyFood
