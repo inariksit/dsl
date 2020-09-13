@@ -12,7 +12,9 @@ We want to be able to translate natural-language contracts and laws to code, wit
 
 See [[https://github.com/smucclaw/complaw/blob/master/doc/ex-20200806-hello-world-rules/][the Potato case]], which illustrates constitutive rules.
 
-We introduce ontology.
+Our ontology:
+- ~x ISA Y~ :: x is an instance; Y is a class.
+- ~Y ISA Z~ :: Y is a class; Z is a superclass.
 
 *** A Simple Contract
 
@@ -133,16 +135,16 @@ A module can explicitly give itself a name by saying
   module Foo.Bar.Baz where
 #+end_src
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
   ModuleDecl. Module ::= "module" ObjAttr "where";
 #+end_src
 
 An L4 Module contains a list of directives and statements.
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
   Toplevel.  Tops      ::= [Toplevels];
   rules      Toplevels ::= Module | Import | Pragma 
-                         | Rule | Entity | Scenario; -- Modal
+                         | Rule | Entity | Scenario;
   terminator Toplevels ";";
 
   layout toplevel;
@@ -152,7 +154,7 @@ An L4 Module contains a list of directives and statements.
 
 C-style and Javascript-style comments are both supported. Also Haskell-style, as a nod to our implementation language.
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
     comment "//" ;
     comment "--" ;
     comment "/*" "*/" ;
@@ -171,7 +173,7 @@ Other modules are welcome to import this module. They would end up with ~element
 
 **** pragma: version
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
   rules Pragma ::= "pragma" CommaList ;
 #+end_src
 
@@ -185,7 +187,7 @@ previous versions of this ruleset are accessible where? because this ruleset may
 import ContractLaw
 #+end_src
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
   Import. Import ::= "import" ObjAttr ;
 #+end_src
 
@@ -203,7 +205,7 @@ An L4 statement is one of the following:
 
 TODO: add scope here
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
 
   rules      RuleDef   ::= RuleNum | RuleID | RuleName
                          | RuleNum   RuleID 
@@ -225,16 +227,17 @@ TODO: add scope here
 
 These rules employ When and Where limbs.
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
+  RuleDeem.   RuleBody  ::= "DEEM" ObjAttr ObjRelations ;
+
   -- DEEM Potato IS noble WHEN ownersAreNoble
-  RBis.     RuleBody  ::= "DEEM"  ObjAttr     "IS"  [ObjAttrAnd] WhenLimb WhereLimb;
-  RBare.    RuleBody  ::= "DEEM" [ObjAttrAnd] "ARE" [ObjAttrAnd] WhenLimb WhereLimb;
+  DeemIs.     ObjRelations ::= "IS"  [ObjAttrAnd] WithLimb WhenLimb WhereLimb;
 
   -- DEEM Potato ISA DiscountItem WHEN CurrentDate ~ Weekend
-  RBisa.    RuleBody  ::= "DEEM"  ObjAttr     "ISA" [ObjAttrAnd] WhenLimb WhereLimb;
+  DeemIsa.    ObjRelations ::= "ISA" [ObjAttrAnd] WithLimb WhenLimb WhereLimb;
 
   -- DEEM Potato HAS discount == 20% WHEN CurrentDate WITHIN 1 week OF ExpirationDate
-  RBhas.    RuleBody  ::= "DEEM"  ObjAttr     "HAS" [ObjAttrAnd] WhenLimb WhereLimb;
+  DeemHas.    ObjRelations ::= "HAS" [ObjAttrAnd] WithLimb WhenLimb WhereLimb;
 
   separator nonempty ObjAttrAnd "AND";
   OBAnd.    ObjAttrAnd ::= ObjAttr ;
@@ -245,25 +248,29 @@ These rules employ When and Where limbs.
 
 Constraint Expressions are used both to evaluate truth values as part of a reasoning operation, and to "assign" values immutably.
 
-#+begin_src bnfc :noweb-ref l4rules
-  rules      WhenLimb ::= | "WHEN" PredExpr ;
+#+begin_src bnfc :noweb-ref l4bnfc
+  rules      WhenLimb ::= | "WHEN" PredExpr UnlessExpr;
 
   -- ... WHEN  
   PEUnify.   PredExpr  ::= UnifyExpr;
   PEAnd.     PredExpr  ::= PredExpr "AND" PredExpr;
   PEOr.      PredExpr  ::= PredExpr "OR"  PredExpr;
-  PEME.      PredExpr1 ::= MatchExpr;
-  PELikely.  PredExpr2 ::= Likelihood PredExpr ;
-  _.         PredExpr2 ::= "(" PredExpr ")";
-  coercions PredExpr 2;
+  PENot.     PredExpr1 ::=          "NOT" PredExpr;
+  PEME.      PredExpr2 ::= MatchExpr;
+  PELikely.  PredExpr3 ::= Likelihood PredExpr ;
+  PEmethod.  PredExpr4 ::= PredExpr "(" [Assignment] ")" ;
+  _.         PredExpr5 ::= "(" PredExpr ")";
+  coercions PredExpr 5;
   -- do we really need to say coercions?
+
+  rules      UnlessExpr ::= | "UNLESS" PredExpr;
 #+end_src
 
 The building blocks of constraint expressions are L4 primitives
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
   rules      UnifyExpr ::= [UnifyElem] | PlainVal;
-  rules      VarExpr   ::= ObjAttr | PlainVal;
+  rules      VarExpr   ::= ObjAttr | ObjAttr "(" [Assignment] ")" | PlainVal | MathExpr;
   rules      PlainVal  ::= Numberlike | String
                          | BraceList | JunctionList | ArrayOfBraces
                          | DateTime | DateTime "to" DateTime | Boolean;
@@ -281,12 +288,20 @@ More complex pattern-matches can be specified using square brackets.
 
 ***** Match Expressions and their primitives
 
-#+begin_src bnfc :noweb-ref l4rules
-  ME_OA_JL.  MatchExpr  ::= UnifyExpr "~" JunctionList ;
+#+begin_src bnfc :noweb-ref l4bnfc
+  ME_OA_JL.  MatchExpr  ::= UnifyExpr  "~" JunctionList ;
+  ME_OA_NJL. MatchExpr  ::= UnifyExpr "!~" JunctionList ;
   ME_OA_Bin. MatchExpr  ::= UnifyExpr BinOp UnifyExpr ;
 
+  rules      MathExpr  ::= Numberlike | ObjAttr
+                         | MathExpr "+" MathExpr
+                         | MathExpr "-" MathExpr
+                         | MathExpr "*" MathExpr
+                         | MathExpr "/" MathExpr ;
+  _.         MathExpr  ::= "(" MathExpr ")" ;
+
   -- similar to CLP #=
-  rules      BinOp      ::= "+" | "-" | "*" | "/" | "<" | ">" | "<=" | ">=" | "==" | "IS" | "ISA" | "ARE";
+  rules      BinOp      ::= "+" | "-" | "*" | "/" | "<" | ">" | "<=" | ">=" | "==" | "IS" | "ISA" | "ARE" | "~" | "!~" ;
 
   rules      Numeric    ::= Integer | Double ;
   rules      Numberlike ::=        Numeric
@@ -301,7 +316,7 @@ Currencies are expressed specifically as ~:SGD: 1400~ or generically as ~$~.
 
 A constraint expression can be labeled as LIKELY or UNLIKELY to serve as a hint to a reasoner.
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
   rules      Likelihood  ::= | "LIKELY" | "UNLIKELY";
 #+end_src
 
@@ -315,7 +330,7 @@ In L4, comma lists work as usual. But we also have and-lists and or-lists, which
 
 Depending on the context, their semantics are "all" vs "any". Internally we call these "junction lists" for "conjunction" and "disjunction".
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
   JL_And.    JunctionList ::= "["   AndList "]" ;
   JL_Or.     JunctionList ::= "["    OrList "]" ;
   JL_Xor.    JunctionList ::= "["   XorList "]" ;
@@ -341,14 +356,13 @@ Depending on the context, their semantics are "all" vs "any". Internally we call
 
 ***** term primitives
 
-L4 uses customary ~record.attribute~, ~object.method()~ notation.
+L4 uses customary ~record.attribute~ notation. It does not support ~object(method)~ notation at this time.
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
 
   rules      ObjAttrElem  ::= Ident | UIdent ;            -- Foo
 
   OA_dots.   ObjAttr      ::= [ObjAttrElem];              -- Foo.Bar.Baz
-  OA_method. ObjAttr      ::= ObjAttr "(" CommaList ")" ; -- Foo.Bar(Baz, Quux)
   separator nonempty ObjAttrElem ".";
 
 
@@ -362,28 +376,25 @@ This is where you park details about parties and other concrete entities involve
 
 ENTITY stanzas contain optional Limbs: Given, With, As Of, Where.
 
-#+begin_src bnfc :noweb-ref l4rules
-  REntity.   Entity ::= "ENTITY" ObjAttr
-                           GivenLimb
-                           EntityDef;
-  rules      EntityDef ::= "ISA" ObjAttr WithLimb Asof WhereLimb
-                         | "HAS"         WithLimb Asof WhereLimb;
+TODO -- allow LangStrings here, so the initial ObjAttr is an EntityID
+#+begin_src bnfc :noweb-ref l4bnfc
+  REntity.   Entity ::= "ENTITY" ObjAttr GivenLimb "ISA" [ObjAttrAnd] WithLimb Asof WhenLimb WhereLimb;
 #+end_src
 
 The "Given" limb is analogous to providing arguments to a function.
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
 
   rules      GivenLimb ::= | "GIVEN"  GivenExpr ;
   rules      GivenExpr ::=   ObjAttr
                            | ObjAttr HavingLimb ;
-  rules HavingLimb ::= "HAVING"  PredExpr;
+  rules     HavingLimb ::= "HAVING"  PredExpr;
 
 #+end_src
 
 The "With" limb assigns attributes to an individual or a class.
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
   rules      WithLimb  ::= | "WITH" "{" [WithIn] "}";
   rules      WithIn    ::= [Assignment] | TraceExpr;
   separator nonempty WithIn ";";
@@ -391,20 +402,20 @@ The "With" limb assigns attributes to an individual or a class.
 
 A "Trace" is syntactic sugar for a "With" limb for perdurants -- facts about an individual or a scenario that are bounded in time.
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
   rules      TraceExpr ::= "TRACE" "{" [LogEvent] "}";
   rules      LogEvent ::= Iso8601 ObjAttr ObjAttr BlahBlah ;
   separator nonempty LogEvent ";";
-  separator nonempty Blah "";
+  separator Blah "";
   rules      BlahBlah ::= | [Blah] ;
   rules      Blah     ::= Numberlike | ObjAttr | JunctionList | BraceList;
 #+end_src
 
 "Where" offers bindings similar to those found in Haskell. This is a convenient place to go into detail about concepts which are mentioned briefly in the main body.
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
   rules     WhereLimb ::= | "WHERE" "{" [WhereIn] "}" ;
-  rules     WhereIn   ::= ObjAttr "ISA" ObjAttr WithLimb
+  rules     WhereIn   ::= ObjAttr ObjRelations
                         | Assignment;
   separator nonempty WhereIn ";";
 #+end_src
@@ -417,7 +428,7 @@ In the future a more comprehensive time library will make it possible to say thi
 
 The "ASOF" limb is syntactic shorthand for indicating a default system time for "WITH" facts declared immediately prior.
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
   Asof.      Asof      ::= "ASOF" DateTime ;
   AsofNull.  Asof      ::= ;
   rules      DateTime  ::= Iso8601 | "PRESENT" | "NOW" ;
@@ -431,8 +442,8 @@ The "ASOF" limb is syntactic shorthand for indicating a default system time for 
 
 Higher-level constructs rely on syntax primitives.
 
-#+begin_src bnfc :noweb-ref l4rules
-  token UIdent (upper (letter | digit | '_')*) ;
+#+begin_src bnfc :noweb-ref l4bnfc
+  token UIdent (upper (letter | digit | '_')*) ; -- doesn't seem to work for single character idents though, like P
   rules      UIdentList ::= [UIdentElem];
   rules      UIdentElem ::= UIdent;
   separator nonempty UIdentElem ".";
@@ -446,7 +457,7 @@ Higher-level constructs rely on syntax primitives.
 
 "WITH" limbs are defined in terms of "foo = bar". We call those "Assignments".
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
   rules BraceList     ::= "{" [Assignment] "}" ;
   rules  Assignment   ::= ObjAttr "=" VarExpr;
   rules ArrayOfBraces ::= "[" [BraceList] "]";
@@ -456,7 +467,7 @@ Higher-level constructs rely on syntax primitives.
 
 ***** SCENARIO stanzas represent traces of events
 
-#+begin_src bnfc :noweb-ref l4rules
+#+begin_src bnfc :noweb-ref l4bnfc
   RScenario. Scenario ::= "SCENARIO" ObjAttr WithLimb TraceExpr Asof WhereLimb ;
 #+end_src
 
@@ -468,9 +479,30 @@ These express what Ken Adams calls
 - language of discretion
 - language of prohibition
 
-#+begin_src bnfc :noweb-ref l4rules
-
+#+begin_src bnfc :noweb-ref l4bnfc
+  RModal.  RuleBody    ::= GivenLimb PartyLimb DeonticLimb WhenLimb DeadlineLimb HenceLimb WhereLimb ;
+  rules    PartyLimb   ::= "PARTY" ObjAttr ;
+  rules    DeonticLimb ::= DeonticExpr ActionLimb;
+  DEMust.  DeonticExpr ::= "MUST" ;
+  DEMay.   DeonticExpr ::= "MAY"  ;
+  DEShant. DeonticExpr ::= "SHANT" ;
+  rules    ActionLimb  ::= ObjAttr BlahBlah ;
+  rules    DeadlineLimb ::= | "BEFORE" TemporalExpr ;
+  rules    TemporalExpr ::= DateTime DurationExpr | ObjAttr DurationExpr ;
+  rules    DurationExpr ::= | "+" Duration ;
+  TDYM.    Duration     ::= Integer "years" ;
+  TDW.     Duration     ::= Integer "weeks" ;
+  TDD.     Duration     ::= Integer "days" ;
+  TDDH.    Duration     ::= Integer "days" "and" Integer "hours" ;
+  DNoHence. HenceLimb    ::= ;
+  DHence.   HenceLimb    ::= "HENCE" RuleDef ;
+  DHeLe.    HenceLimb    ::= "HENCE" RuleDef "LEST" RuleDef ;
+  DLest.    HenceLimb    ::=                 "LEST" RuleDef ;
 #+end_src
+
+We need a beefier syntax for temporal expressions.
+
+
 
 **** Text Examples
 
@@ -513,40 +545,39 @@ These express what Ken Adams calls
 
 ***** The Jurix Paper
 
-#+begin_src l4 :tangle bnfc/l4/test2.l4
-// from the JURIX paper
+#+begin_src sql :noweb-ref l4-rules
+  // from the JURIX paper
 
-RULE   "Sale Restricted"
-   PARTY  P
+  RULE   :en:"Sale Restricted"
+   PARTY  P1
    SHANT  sell Item
-   WHEN   Item.isCabbage
+   WHEN   Item IS Cabbage
    UNLESS sale.onLegalDate
-       OR UNLIKELY P.hasExemption from:DirectorOfAgriculture
-          HENCE Rule "Return Policy"
-   WHERE
-      DEEM Item IS Cabbage en:"is a cabbage"
-           WHEN Item.faostat ~ "FCL ITEM 0358"
-             OR (Item.category      ~ "vegetable"
+       OR UNLIKELY P1.hasExemption.from ~ [DirectorOfAgriculture]
+          HENCE ReturnPolicy
+   WHERE  Item IS Cabbage
+           WHEN Item.faostat == "FCL ITEM 0358"
+             OR (Item.category     == "vegetable"
                  AND Item.species   ~ ["Brassica chinensis", "Brassica oleracea"]
-                 AND Item.cultivar !~ "botrytis")
-      DEEM sale.onLegalDate en:"on the day of a full moon"
+                 AND NOT Item.cultivar == "botrytis")
+          sale IS onLegalDate
            WHEN sale.date ~ LegalDates
-           WHERE LegalDates = EXTERNAL url
-                              "https://www.almanac.com/astronomy/moon/full/"
-        
-    RULE "Return Policy"
-   GIVEN sale
-   PARTY Buyer
-     MAY return Item
-  BEFORE sale.date + 3W
-   HENCE Rule "Net 3"
-   
-    RULE "Net 3"
-   GIVEN return
-   PARTY Seller
-    MUST refund Amount
-  BEFORE return.date + 3D
-   WHERE Amount == return.sale.cash * 90%
+           WHERE LegalDates = external(url="https://www.almanac.com/astronomy/moon/full/")
+
+  RULE ReturnPolicy
+     GIVEN sale
+     PARTY Buyer
+       MAY return Item
+    BEFORE sale.date + 3 weeks
+     HENCE Net3
+
+  RULE Net3
+     GIVEN return
+     PARTY Seller
+      MUST refund Amount
+    BEFORE return.date + 3 days
+     WHERE Amount = return.sale.cash * 90%
+
 #+end_src
 
 **** TODO Syntax Sketchbook
@@ -1913,6 +1944,6 @@ See also: argumentation theory.
 * Output
 
 #+begin_src bnfc :noweb yes :tangle bnfc/l4.bnfc
-<<l4rules>>
+<<l4bnfc>>
 <<l4expressions>>
 #+end_src

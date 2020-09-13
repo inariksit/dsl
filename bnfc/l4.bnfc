@@ -1,7 +1,7 @@
 ModuleDecl. Module ::= "module" ObjAttr "where";
 Toplevel.  Tops      ::= [Toplevels];
 rules      Toplevels ::= Module | Import | Pragma 
-                       | Rule | Entity | Scenario; -- Modal
+                       | Rule | Entity | Scenario;
 terminator Toplevels ";";
 
 layout toplevel;
@@ -25,32 +25,37 @@ RNum.      RuleNum   ::= Integer;
 Rule.      Rule      ::= "RULE" RuleDef RuleBody;
 RBNoop.    RuleBody  ::= "NOOP";
 
+RuleDeem.   RuleBody  ::= "DEEM" ObjAttr ObjRelations ;
+
 -- DEEM Potato IS noble WHEN ownersAreNoble
-RBis.     RuleBody  ::= "DEEM"  ObjAttr     "IS"  [ObjAttrAnd] WhenLimb WhereLimb;
-RBare.    RuleBody  ::= "DEEM" [ObjAttrAnd] "ARE" [ObjAttrAnd] WhenLimb WhereLimb;
+DeemIs.     ObjRelations ::= "IS"  [ObjAttrAnd] WithLimb WhenLimb WhereLimb;
 
 -- DEEM Potato ISA DiscountItem WHEN CurrentDate ~ Weekend
-RBisa.    RuleBody  ::= "DEEM"  ObjAttr     "ISA" [ObjAttrAnd] WhenLimb WhereLimb;
+DeemIsa.    ObjRelations ::= "ISA" [ObjAttrAnd] WithLimb WhenLimb WhereLimb;
 
 -- DEEM Potato HAS discount == 20% WHEN CurrentDate WITHIN 1 week OF ExpirationDate
-RBhas.    RuleBody  ::= "DEEM"  ObjAttr     "HAS" [ObjAttrAnd] WhenLimb WhereLimb;
+DeemHas.    ObjRelations ::= "HAS" [ObjAttrAnd] WithLimb WhenLimb WhereLimb;
 
 separator nonempty ObjAttrAnd "AND";
 OBAnd.    ObjAttrAnd ::= ObjAttr ;
 
-rules      WhenLimb ::= | "WHEN" PredExpr ;
+rules      WhenLimb ::= | "WHEN" PredExpr UnlessExpr;
 
 -- ... WHEN  
 PEUnify.   PredExpr  ::= UnifyExpr;
 PEAnd.     PredExpr  ::= PredExpr "AND" PredExpr;
 PEOr.      PredExpr  ::= PredExpr "OR"  PredExpr;
-PEME.      PredExpr1 ::= MatchExpr;
-PELikely.  PredExpr2 ::= Likelihood PredExpr ;
-_.         PredExpr2 ::= "(" PredExpr ")";
-coercions PredExpr 2;
+PENot.     PredExpr1 ::=          "NOT" PredExpr;
+PEME.      PredExpr2 ::= MatchExpr;
+PELikely.  PredExpr3 ::= Likelihood PredExpr ;
+PEmethod.  PredExpr4 ::= PredExpr "(" [Assignment] ")" ;
+_.         PredExpr5 ::= "(" PredExpr ")";
+coercions PredExpr 5;
 -- do we really need to say coercions?
+
+rules      UnlessExpr ::= | "UNLESS" PredExpr;
 rules      UnifyExpr ::= [UnifyElem] | PlainVal;
-rules      VarExpr   ::= ObjAttr | PlainVal;
+rules      VarExpr   ::= ObjAttr | ObjAttr "(" [Assignment] ")" | PlainVal | MathExpr;
 rules      PlainVal  ::= Numberlike | String
                        | BraceList | JunctionList | ArrayOfBraces
                        | DateTime | DateTime "to" DateTime | Boolean;
@@ -60,11 +65,19 @@ rules      UnifyElem ::= ObjAttrElem
 separator nonempty UnifyElem ".";
 rules      UnifyStar ::= "*" ;
 rules      UnifyBracket ::= "[" CommaList "]" ;
-ME_OA_JL.  MatchExpr  ::= UnifyExpr "~" JunctionList ;
+ME_OA_JL.  MatchExpr  ::= UnifyExpr  "~" JunctionList ;
+ME_OA_NJL. MatchExpr  ::= UnifyExpr "!~" JunctionList ;
 ME_OA_Bin. MatchExpr  ::= UnifyExpr BinOp UnifyExpr ;
 
+rules      MathExpr  ::= Numberlike | ObjAttr
+                       | MathExpr "+" MathExpr
+                       | MathExpr "-" MathExpr
+                       | MathExpr "*" MathExpr
+                       | MathExpr "/" MathExpr ;
+_.         MathExpr  ::= "(" MathExpr ")" ;
+
 -- similar to CLP #=
-rules      BinOp      ::= "+" | "-" | "*" | "/" | "<" | ">" | "<=" | ">=" | "==" | "IS" | "ISA" | "ARE";
+rules      BinOp      ::= "+" | "-" | "*" | "/" | "<" | ">" | "<=" | ">=" | "==" | "IS" | "ISA" | "ARE" | "~" | "!~" ;
 
 rules      Numeric    ::= Integer | Double ;
 rules      Numberlike ::=        Numeric
@@ -97,20 +110,15 @@ separator nonempty XorElem "^";
 rules      ObjAttrElem  ::= Ident | UIdent ;            -- Foo
 
 OA_dots.   ObjAttr      ::= [ObjAttrElem];              -- Foo.Bar.Baz
-OA_method. ObjAttr      ::= ObjAttr "(" CommaList ")" ; -- Foo.Bar(Baz, Quux)
 separator nonempty ObjAttrElem ".";
 
 
-REntity.   Entity ::= "ENTITY" ObjAttr
-                         GivenLimb
-                         EntityDef;
-rules      EntityDef ::= "ISA" ObjAttr WithLimb Asof WhereLimb
-                       | "HAS"         WithLimb Asof WhereLimb;
+REntity.   Entity ::= "ENTITY" ObjAttr GivenLimb "ISA" [ObjAttrAnd] WithLimb Asof WhenLimb WhereLimb;
 
 rules      GivenLimb ::= | "GIVEN"  GivenExpr ;
 rules      GivenExpr ::=   ObjAttr
                          | ObjAttr HavingLimb ;
-rules HavingLimb ::= "HAVING"  PredExpr;
+rules     HavingLimb ::= "HAVING"  PredExpr;
 
 rules      WithLimb  ::= | "WITH" "{" [WithIn] "}";
 rules      WithIn    ::= [Assignment] | TraceExpr;
@@ -118,11 +126,11 @@ separator nonempty WithIn ";";
 rules      TraceExpr ::= "TRACE" "{" [LogEvent] "}";
 rules      LogEvent ::= Iso8601 ObjAttr ObjAttr BlahBlah ;
 separator nonempty LogEvent ";";
-separator nonempty Blah "";
+separator Blah "";
 rules      BlahBlah ::= | [Blah] ;
 rules      Blah     ::= Numberlike | ObjAttr | JunctionList | BraceList;
 rules     WhereLimb ::= | "WHERE" "{" [WhereIn] "}" ;
-rules     WhereIn   ::= ObjAttr "ISA" ObjAttr WithLimb
+rules     WhereIn   ::= ObjAttr ObjRelations
                       | Assignment;
 separator nonempty WhereIn ";";
 Asof.      Asof      ::= "ASOF" DateTime ;
@@ -132,7 +140,7 @@ rules      Iso8601   ::= YYYYMMDD | YYYYMMDDTHHMM;
 
 token YYYYMMDD      ( digit digit digit digit '-'? digit digit '-'? digit digit );
 token YYYYMMDDTHHMM ( digit digit digit digit '-'? digit digit '-'? digit digit 'T' digit digit digit digit );
-token UIdent (upper (letter | digit | '_')*) ;
+token UIdent (upper (letter | digit | '_')*) ; -- doesn't seem to work for single character idents though, like P
 rules      UIdentList ::= [UIdentElem];
 rules      UIdentElem ::= UIdent;
 separator nonempty UIdentElem ".";
@@ -148,7 +156,24 @@ rules ArrayOfBraces ::= "[" [BraceList] "]";
 separator nonempty Assignment  "," ;
 separator nonempty BraceList "," ;
 RScenario. Scenario ::= "SCENARIO" ObjAttr WithLimb TraceExpr Asof WhereLimb ;
-
+RModal.  RuleBody    ::= GivenLimb PartyLimb DeonticLimb WhenLimb DeadlineLimb HenceLimb WhereLimb ;
+rules    PartyLimb   ::= "PARTY" ObjAttr ;
+rules    DeonticLimb ::= DeonticExpr ActionLimb;
+DEMust.  DeonticExpr ::= "MUST" ;
+DEMay.   DeonticExpr ::= "MAY"  ;
+DEShant. DeonticExpr ::= "SHANT" ;
+rules    ActionLimb  ::= ObjAttr BlahBlah ;
+rules    DeadlineLimb ::= | "BEFORE" TemporalExpr ;
+rules    TemporalExpr ::= DateTime DurationExpr | ObjAttr DurationExpr ;
+rules    DurationExpr ::= | "+" Duration ;
+TDYM.    Duration     ::= Integer "years" ;
+TDW.     Duration     ::= Integer "weeks" ;
+TDD.     Duration     ::= Integer "days" ;
+TDDH.    Duration     ::= Integer "days" "and" Integer "hours" ;
+DNoHence. HenceLimb    ::= ;
+DHence.   HenceLimb    ::= "HENCE" RuleDef ;
+DHeLe.    HenceLimb    ::= "HENCE" RuleDef "LEST" RuleDef ;
+DLest.    HenceLimb    ::=                 "LEST" RuleDef ;
 EString.      NormalString ::= String ;
 ELangStrings. LangStrings  ::= [LangString] ;
     separator nonempty LangString " ";
