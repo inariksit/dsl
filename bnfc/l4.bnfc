@@ -1,10 +1,12 @@
 ModuleDecl. Module ::= "module" ObjAttr "where";
-Toplevel.  Rules ::= [Toplevels];
-rules      Toplevels ::= Rule | Module | Import | Pragma | Entity | Knol ;
+Toplevel.  Tops      ::= [Toplevels];
+rules      Toplevels ::= Module | Import | Pragma 
+                       | Rule | Entity | Scenario; -- Modal
 terminator Toplevels ";";
 
 layout toplevel;
-entrypoints Rules;
+layout "WITH", "TRACE", "WHERE" ;
+entrypoints Tops;
 comment "//" ;
 comment "--" ;
 comment "/*" "*/" ;
@@ -24,19 +26,19 @@ Rule.      Rule      ::= "RULE" RuleDef RuleBody;
 RBNoop.    RuleBody  ::= "NOOP";
 
 -- DEEM Potato IS noble WHEN ownersAreNoble
-RBis.     RuleBody  ::= "DEEM"  ObjAttr     "IS"  [ObjAttrAnd] WhenPred WhereExpr;
-RBare.    RuleBody  ::= "DEEM" [ObjAttrAnd] "ARE" [ObjAttrAnd] WhenPred WhereExpr;
+RBis.     RuleBody  ::= "DEEM"  ObjAttr     "IS"  [ObjAttrAnd] WhenLimb WhereLimb;
+RBare.    RuleBody  ::= "DEEM" [ObjAttrAnd] "ARE" [ObjAttrAnd] WhenLimb WhereLimb;
 
 -- DEEM Potato ISA DiscountItem WHEN CurrentDate ~ Weekend
-RBisa.    RuleBody  ::= "DEEM"  ObjAttr     "ISA" [ObjAttrAnd] WhenPred WhereExpr;
+RBisa.    RuleBody  ::= "DEEM"  ObjAttr     "ISA" [ObjAttrAnd] WhenLimb WhereLimb;
 
 -- DEEM Potato HAS discount == 20% WHEN CurrentDate WITHIN 1 week OF ExpirationDate
-RBhas.    RuleBody  ::= "DEEM"  ObjAttr     "HAS" [ObjAttrAnd] WhenPred WhereExpr;
+RBhas.    RuleBody  ::= "DEEM"  ObjAttr     "HAS" [ObjAttrAnd] WhenLimb WhereLimb;
 
 separator nonempty ObjAttrAnd "AND";
 OBAnd.    ObjAttrAnd ::= ObjAttr ;
 
-rules      WhenPred ::= | "WHEN" PredExpr ;
+rules      WhenLimb ::= | "WHEN" PredExpr ;
 
 -- ... WHEN  
 PEUnify.   PredExpr  ::= UnifyExpr;
@@ -60,11 +62,6 @@ rules      UnifyStar ::= "*" ;
 rules      UnifyBracket ::= "[" CommaList "]" ;
 ME_OA_JL.  MatchExpr  ::= UnifyExpr "~" JunctionList ;
 ME_OA_Bin. MatchExpr  ::= UnifyExpr BinOp UnifyExpr ;
-BTrue.     Boolean    ::= TrueBool; -- later, maybe | "yes"
-BFalse.    Boolean    ::= FalseBool;
-
-token TrueBool  ["Tt"] ["Rr"] ["Uu"] ["Ee"] ;
-token FalseBool ["Ff"] ["Aa"] ["Ll"] ["Ss"] ["Ee"];
 
 -- similar to CLP #=
 rules      BinOp      ::= "+" | "-" | "*" | "/" | "<" | ">" | "<=" | ">=" | "==" | "IS" | "ISA" | "ARE";
@@ -104,48 +101,30 @@ OA_method. ObjAttr      ::= ObjAttr "(" CommaList ")" ; -- Foo.Bar(Baz, Quux)
 separator nonempty ObjAttrElem ".";
 
 
-Entity.    Entity    ::= "ENTITY" ObjAttr
+REntity.   Entity ::= "ENTITY" ObjAttr
                          GivenLimb
                          EntityDef;
+rules      EntityDef ::= "ISA" ObjAttr WithLimb Asof WhereLimb
+                       | "HAS"         WithLimb Asof WhereLimb;
 
 rules      GivenLimb ::= | "GIVEN"  GivenExpr ;
-rules      GivenExpr ::=   ObjAttr "HAVING"  PredExpr ;
+rules      GivenExpr ::=   ObjAttr
+                         | ObjAttr HavingLimb ;
+rules HavingLimb ::= "HAVING"  PredExpr;
 
-rules      EntityDef ::= "ISA" ObjAttr WithExpr Asof WhenPred WhereExpr
-                       | "HAS"         WithExpr Asof WhenPred WhereExpr;
-
-rules      WithExpr  ::= | "WITH" "{" [WithIn] "}";
-rules      WithIn    ::= [BraceElem] | TraceExpr;
+rules      WithLimb  ::= | "WITH" "{" [WithIn] "}";
+rules      WithIn    ::= [Assignment] | TraceExpr;
 separator nonempty WithIn ";";
-
 rules      TraceExpr ::= "TRACE" "{" [LogEvent] "}";
-rules      LogEvent ::= Iso8601 ObjAttr ObjAttr ObjAttr BlahBlah ;
+rules      LogEvent ::= Iso8601 ObjAttr ObjAttr BlahBlah ;
 separator nonempty LogEvent ";";
 separator nonempty Blah "";
-rules      BlahBlah ::= [Blah] | ;
+rules      BlahBlah ::= | [Blah] ;
 rules      Blah     ::= Numberlike | ObjAttr | JunctionList | BraceList;
-
-layout "WITH", "TRACE", "WHERE" ;
-
-rules     WhereExpr ::= | "WHERE" "{" [WhereIn] "}" ;
-rules     WhereIn   ::= ObjAttr "ISA" ObjAttr 
-                      | ObjAttr "ISA" ObjAttr WithExpr
-                      | BraceElem;
+rules     WhereLimb ::= | "WHERE" "{" [WhereIn] "}" ;
+rules     WhereIn   ::= ObjAttr "ISA" ObjAttr WithLimb
+                      | Assignment;
 separator nonempty WhereIn ";";
-
-rules      UIdentList ::= [UIdentElem];
-rules      UIdentElem ::= UIdent;
-separator nonempty UIdentElem ".";
-
-token UIdent (upper (letter | digit | '_')*) ;
-
-rules BraceList ::= "{" [BraceElem] "}" ;
-rules  BraceElem ::= ObjAttr "=" VarExpr;
-separator nonempty BraceElem  "," ;
-rules ArrayOfBraces ::= "[" [BraceList] "]";
-separator nonempty BraceList "," ;
-
-Knol.       Knol     ::= "KNOL" ObjAttr WithExpr;
 Asof.      Asof      ::= "ASOF" DateTime ;
 AsofNull.  Asof      ::= ;
 rules      DateTime  ::= Iso8601 | "PRESENT" | "NOW" ;
@@ -153,8 +132,23 @@ rules      Iso8601   ::= YYYYMMDD | YYYYMMDDTHHMM;
 
 token YYYYMMDD      ( digit digit digit digit '-'? digit digit '-'? digit digit );
 token YYYYMMDDTHHMM ( digit digit digit digit '-'? digit digit '-'? digit digit 'T' digit digit digit digit );
+token UIdent (upper (letter | digit | '_')*) ;
+rules      UIdentList ::= [UIdentElem];
+rules      UIdentElem ::= UIdent;
+separator nonempty UIdentElem ".";
 
--- WHEN X WITHIN Y OF Z
+BTrue.     Boolean    ::= TrueBool; -- later, maybe | "yes"
+BFalse.    Boolean    ::= FalseBool;
+
+token TrueBool  ["Tt"] ["Rr"] ["Uu"] ["Ee"] ;
+token FalseBool ["Ff"] ["Aa"] ["Ll"] ["Ss"] ["Ee"];
+rules BraceList     ::= "{" [Assignment] "}" ;
+rules  Assignment   ::= ObjAttr "=" VarExpr;
+rules ArrayOfBraces ::= "[" [BraceList] "]";
+separator nonempty Assignment  "," ;
+separator nonempty BraceList "," ;
+RScenario. Scenario ::= "SCENARIO" ObjAttr WithLimb TraceExpr Asof WhereLimb ;
+
 EString.      NormalString ::= String ;
 ELangStrings. LangStrings  ::= [LangString] ;
     separator nonempty LangString " ";

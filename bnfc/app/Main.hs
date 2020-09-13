@@ -9,7 +9,7 @@ import Control.Monad      ( when )
 import Text.Pretty.Simple
 import qualified Data.Text.Lazy as T
 import LexL    ( Token )
-import ParL    ( pRules, myLexer )
+import ParL    ( pTops, myLexer )
 import SkelL   ()
 import PrintL  ( Print, printTree )
 import AbsL    ()
@@ -67,7 +67,7 @@ main = do
   args <- getArgs
   case args of
     ["--help"] -> usage
-    [] -> getContents >>= run 2 pRules
-    "-s":fs -> mapM_ (runFile 0 pRules) fs
-    fs -> mapM_ (runFile 2 pRules) fs
+    [] -> getContents >>= run 2 pTops
+    "-s":fs -> mapM_ (runFile 0 pTops) fs
+    fs -> mapM_ (runFile 2 pTops) fs
 

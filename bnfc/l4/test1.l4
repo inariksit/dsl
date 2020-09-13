@@ -83,11 +83,11 @@ ENTITY celebXY
        xtime = 2020-09-01, maritalStatus = married,  vtime = 2020-06-01 to PRESENT
        xtime = 2020-12-01, maritalStatus = married,  vtime = 2020-06-01 to 2020-11-01
        xtime = 2020-12-01, maritalStatus = divorced, vtime = 2020-11-01 to PRESENT
-KNOL alicePregnancy
-  WITH xtime = 2020-08-01, knownBy = Alice,                              beliefs =                  { pregnancy = true }
-       xtime = 2020-09-01,  toldBy = Alice,                              beliefs = { knownBy = Alice, pregnancy = true }  , toldTo = Bob
-       xtime = 2020-09-01, knownBy = Alice, beliefs = { knownBy = Bob,   beliefs = { knownBy = Alice, pregnancy = true } }, vtime = 2020-09-04
-       xtime = 2020-10-01, knownBy =   Bob, beliefs = { knownBy = Alice, beliefs = { knownBy = Alice, pregnancy = true }  , vtime = 2020-09-01 }, vtime = 2020-09-10
+SCENARIO alicePregnancy
+   TRACE 2020-08-01 Alice knew { pregnancy = true }
+         2020-09-01 Alice told Bob { knownBy = Alice, pregnancy = true }
+         2020-09-01 Alice knew { knownBy = Bob,  vtime = 2020-09-04, beliefs = { knownBy = Alice, pregnancy = true } }
+         2020-10-01 Bob   knew { knownBy = Alice, beliefs = { knownBy = Alice, pregnancy = true, vtime = 2020-09-01 }, vtime = 2020-09-10 }
 ENTITY veggieBar
    ISA Business
   WITH address = [ "1 Veggie Way" ]
@@ -107,13 +107,12 @@ ENTITY buyCabbage
              WITH category = "vegetable"
                   species  = "Brassica oleracea"
                   cultivar = "capitata"
-ENTITY genericContract
-   ISA Scenario
-  WITH parties      = [ blackSwan, veggieBar ]
-       TRACE 2020-09-01T1210 blackSwan offers     offerDetails
-             2020-09-01T1211 veggieBar accepts    offerDetails
-             2020-09-01T1212 blackSwan pays       veggieBar $10
-             2020-09-01T1213 veggieBar deliversTo blackSwan [ item1, item2 ]
+SCENARIO saleHistory
+  WITH parties = [ blackSwan, veggieBar ]
+ TRACE 2020-09-01T1210 blackSwan offers     offerDetails
+       2020-09-01T1211 veggieBar accepts    offerDetails
+       2020-09-01T1212 blackSwan pays       veggieBar $10
+       2020-09-01T1213 veggieBar deliversTo blackSwan [ item1, item2 ]
   ASOF 2020-09-10
  WHERE offerDetails = { blackSwan.consideration = $10
                       , veggieBar.consideration = [ item1, item2 ] }
