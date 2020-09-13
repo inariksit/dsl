@@ -20,7 +20,7 @@ RULE 3 isPotato
 //                                                     ^
 ENTITY spud2
    ISA Item
-  WITH species = "Solanum tuberosum"
+  WITH species  = "Solanum tuberosum"
        isEdible = true
        previousOwners = [ alice, bob, charlie, daryl ]
 ENTITY alice   ISA Human WITH isNoble = true
@@ -69,13 +69,14 @@ a list comprehension
 
 ENTITY blackSwan
    ISA Human
-  WITH birthdate   = { xtime = 2020-09-10, value = 1981-06-09 }
+  WITH birthdate = { xtime = 2020-09-10, value = 1981-06-09 }
 //     a person can have multiple nationalities
-       nationality = [ { xtime = 2020-09-10, value = IL, vtime = 1981-06-09 to PRESENT }
-                     , { xtime = 2020-09-10, value = US                                } ]
+       nationality = [ { xtime = 2020-09-10, value = "IL", vtime = 1981-06-09 to PRESENT }
+                     , { xtime = 2020-09-10, value = "US"                                } ]
 //     a person can have multiple names
        fullname    = [ { xtime = 2020-09-10, value = ["Neta-Lee Hershlag", "Natalie Portman"] } ]
 ENTITY celebXY
+ GIVEN Tabloid HAVING ceaselessCoverage IS true
    ISA Couple
   WITH xtime = 2020-01-01, maritalStatus = dating
        xtime = 2020-07-01, maritalStatus = married
@@ -95,25 +96,25 @@ ENTITY veggieBar
 
 ENTITY buyCabbage
    ISA ContractOfSale
-  ASOF 2020-09-10
   WITH date         = 2020-09-10
        jurisdiction = SG
        buyer        = blackSwan
        seller       = veggieBar
-       buyer.consideration = $10
+       buyer.consideration  = :USD: 10
        seller.consideration = [ item1, item2 ]
+  ASOF 2020-09-10
  WHERE item1 ISA  Item
              WITH category = "vegetable"
                   species  = "Brassica oleracea"
                   cultivar = "capitata"
 ENTITY genericContract
    ISA Scenario
-  ASOF 2020-09-10
   WITH parties      = [ blackSwan, veggieBar ]
        TRACE 2020-09-01T1210 blackSwan offers     offerDetails
              2020-09-01T1211 veggieBar accepts    offerDetails
              2020-09-01T1212 blackSwan pays       veggieBar $10
              2020-09-01T1213 veggieBar deliversTo blackSwan [ item1, item2 ]
+  ASOF 2020-09-10
  WHERE offerDetails = { blackSwan.consideration = $10
                       , veggieBar.consideration = [ item1, item2 ] }
        item1 ISA Item
@@ -128,5 +129,5 @@ ENTITY genericContract
                   quantity = 1
 ENTITY spud1
    ISA Item
-  WITH species = "Solanum tuberosum"
+  WITH species  = "Solanum tuberosum"
        isEdible = true

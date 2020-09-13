@@ -172,7 +172,7 @@ Other modules are welcome to import this module. They would end up with ~element
 **** pragma: version
 
 #+begin_src bnfc :noweb-ref l4rules
-  rules Pragma ::= "pragma" [KeyVal] ;
+  rules Pragma ::= "pragma" CommaList ;
 #+end_src
 
 **** history
@@ -199,6 +199,10 @@ An L4 statement is one of the following:
 
 **** Rules
 
+***** A Rule Stanza
+
+TODO: add scope here
+
 #+begin_src bnfc :noweb-ref l4rules
 
   rules      RuleDef   ::= RuleNum | RuleID | RuleName
@@ -215,7 +219,7 @@ An L4 statement is one of the following:
 
 #+end_src
 
-***** Deem
+***** DEEM Rules
 
 #+begin_src bnfc :noweb-ref l4rules
   -- DEEM Potato IS noble WHEN ownersAreNoble
@@ -225,7 +229,7 @@ An L4 statement is one of the following:
   -- DEEM Potato ISA DiscountItem WHEN CurrentDate ~ Weekend
   RBisa.    RuleBody  ::= "DEEM"  ObjAttr     "ISA" [ObjAttrAnd] WhenPred WhereExpr;
 
-  -- DEEM Potato HAS discount = 20% WHEN CurrentDate WITHIN 1 week OF ExpirationDate
+  -- DEEM Potato HAS discount == 20% WHEN CurrentDate WITHIN 1 week OF ExpirationDate
   RBhas.    RuleBody  ::= "DEEM"  ObjAttr     "HAS" [ObjAttrAnd] WhenPred WhereExpr;
 
   separator nonempty ObjAttrAnd "AND";
@@ -251,10 +255,14 @@ Constraint Expressions are used both to evaluate truth values as part of a reaso
   -- do we really need to say coercions?
 #+end_src
 
-The term syntax allows unification expressions where a plain term would normally go.
+
 
 #+begin_src bnfc :noweb-ref l4rules
-  rules      UnifyExpr ::= [UnifyElem] | Numberlike ;
+  rules      UnifyExpr ::= [UnifyElem] | PlainVal;
+  rules      VarExpr   ::= ObjAttr | PlainVal;
+  rules      PlainVal  ::= Numberlike | String
+                         | BraceList | JunctionList | ArrayOfBraces
+                         | DateTime | DateTime "to" DateTime | Boolean;
   rules      UnifyElem ::= ObjAttrElem
                         |  UnifyBracket
                         |  UnifyStar;
@@ -268,15 +276,20 @@ The term syntax allows unification expressions where a plain term would normally
 #+begin_src bnfc :noweb-ref l4rules
   ME_OA_JL.  MatchExpr  ::= UnifyExpr "~" JunctionList ;
   ME_OA_Bin. MatchExpr  ::= UnifyExpr BinOp UnifyExpr ;
-  ME_True.   MatchExpr  ::= "True";
-  ME_False.  MatchExpr  ::= "False";
+  BTrue.     Boolean    ::= TrueBool; -- later, maybe | "yes"
+  BFalse.    Boolean    ::= FalseBool;
+
+  token TrueBool  ["Tt"] ["Rr"] ["Uu"] ["Ee"] ;
+  token FalseBool ["Ff"] ["Aa"] ["Ll"] ["Ss"] ["Ee"];
 
   -- similar to CLP #=
   rules      BinOp      ::= "+" | "-" | "*" | "/" | "<" | ">" | "<=" | ">=" | "==" | "IS" | "ISA" | "ARE";
 
   rules      Numeric    ::= Integer | Double ;
-  rules      Numberlike   ::= "$" Numeric
-                            | Numeric ;
+  rules      Numberlike ::=        Numeric
+                          | "$"    Numeric
+                          | CurrID Numeric
+                          |        Numeric "%" ;
 #+end_src
 
 ***** Weighted Branches
@@ -289,15 +302,15 @@ A constraint expression can be labeled as LIKELY or UNLIKELY to serve as a hint 
 
 ***** Junction Lists
 
-#+begin_src bnfc :noweb-ref l4rules
+Most programming languages have the concept of lists, or arrays. Usually, elements of those lists are separated by commas.
 
+In L4, comma lists work as usual. But we also have and-lists and or-lists, which are separated by "&" and "|" respectively.
+
+#+begin_src bnfc :noweb-ref l4rules
   JL_And.    JunctionList ::= "["   AndList "]" ;
   JL_Or.     JunctionList ::= "["    OrList "]" ;
   JL_Xor.    JunctionList ::= "["   XorList "]" ;
   JL_Comma.  JunctionList ::= "[" CommaList "]" ;
-
-  -- some work to be done here -- the and, or, xor lists have to have at least 2 elements
-  -- if there's only one element it's a plain list
 
   CommaList.  CommaList ::= [CommaElem];
   rules      CommaElem ::= ObjAttr | String;
@@ -307,13 +320,13 @@ A constraint expression can be labeled as LIKELY or UNLIKELY to serve as a hint 
   rules      AndElem ::= ObjAttr | String;
   separator nonempty AndElem "&";
 
-  XorList.   XorList ::= [XorElem];
-  rules      XorElem ::= ObjAttr | String;
-  separator nonempty XorElem "|";
-
   OrList.    OrList ::= [OrElem];
   rules      OrElem ::= ObjAttr | String;
   separator nonempty OrElem "|";
+
+  XorList.   XorList ::= [XorElem];
+  rules      XorElem ::= ObjAttr | String;
+  separator nonempty XorElem "^";
 
 #+end_src
 
@@ -327,31 +340,25 @@ A constraint expression can be labeled as LIKELY or UNLIKELY to serve as a hint 
   OA_method. ObjAttr      ::= ObjAttr "(" CommaList ")" ; -- Foo.Bar(Baz, Quux)
   separator nonempty ObjAttrElem ".";
 
-  rules      KeyVal     ::= ObjAttr ":" ObjAttr
-                          | ObjAttr "=" ObjAttr
-                          | ObjAttr "=" String
-                          | ObjAttr "=" Numberlike
-                          | ObjAttr "=" BraceList
-                          | ObjAttr "=" ArrayOfBraces
-                          | ObjAttr "=" JunctionList
-                          | ObjAttr "=" DateTime 
-                          | ObjAttr "=" DateTime "to" DateTime;
-  separator nonempty KeyVal ",";
-
 
 #+end_src
 
-***** Rules: ENTITIES
+***** ENTITY Rules
+
 
 #+begin_src bnfc :noweb-ref l4rules
   Entity.    Entity    ::= "ENTITY" ObjAttr
-                           "ISA"    ObjAttr
-                           Asof
-                           WithExpr
-                           WhereExpr;
+                           GivenLimb
+                           EntityDef;
 
-  With.      WithExpr  ::= "WITH" "{" [WithIn] "}";
-  rules      WithIn    ::= EqList | TraceExpr;
+  rules      GivenLimb ::= | "GIVEN"  GivenExpr ;
+  rules      GivenExpr ::=   ObjAttr "HAVING"  PredExpr ;
+
+  rules      EntityDef ::= "ISA" ObjAttr WithExpr Asof WhenPred WhereExpr
+                         | "HAS"         WithExpr Asof WhenPred WhereExpr;
+ 
+  rules      WithExpr  ::= | "WITH" "{" [WithIn] "}";
+  rules      WithIn    ::= [BraceElem] | TraceExpr;
   separator nonempty WithIn ";";
 
   rules      TraceExpr ::= "TRACE" "{" [LogEvent] "}";
@@ -362,15 +369,12 @@ A constraint expression can be labeled as LIKELY or UNLIKELY to serve as a hint 
   rules      Blah     ::= Numberlike | ObjAttr | JunctionList | BraceList;
 
   layout "WITH", "TRACE", "WHERE" ;
-  separator nonempty EqList ";" ;
 
   rules     WhereExpr ::= | "WHERE" "{" [WhereIn] "}" ;
   rules     WhereIn   ::= ObjAttr "ISA" ObjAttr 
                         | ObjAttr "ISA" ObjAttr WithExpr
-                        | EqList;
+                        | BraceElem;
   separator nonempty WhereIn ";";
-
-  EqList.      EqList ::= [KeyVal];
 
   rules      UIdentList ::= [UIdentElem];
   rules      UIdentElem ::= UIdent;
@@ -378,7 +382,9 @@ A constraint expression can be labeled as LIKELY or UNLIKELY to serve as a hint 
 
   token UIdent (upper (letter | digit | '_')*) ;
 
-  rules BraceList ::= "{" [KeyVal] "}" ;
+  rules BraceList ::= "{" [BraceElem] "}" ;
+  rules  BraceElem ::= ObjAttr "=" VarExpr;
+  separator nonempty BraceElem  "," ;
   rules ArrayOfBraces ::= "[" [BraceList] "]";
   separator nonempty BraceList "," ;
 
@@ -473,7 +479,7 @@ RULE   "Sale Restricted"
    PARTY Seller
     MUST refund Amount
   BEFORE return.date + 3D
-   WHERE Amount = return.sale.cash * 90%
+   WHERE Amount == return.sale.cash * 90%
 #+end_src
 
 **** TODO Syntax Sketchbook
@@ -498,7 +504,7 @@ REGULATIVE RULE  "Companies Must Hold AGM" @ cmhagm
 mengwong@solo-wmw ~/src/smucclaw/complaw/doc/ex-nz-rates-20200909/hs $ stack exec hs-exe
 DEFINITION RULE "egm business"
 FORALL Company.generalMeetings.isExtraordinary?.business {
-  .level = Special
+  .level == Special
 }
 
 DEFINITION RULE "agm business"
@@ -625,6 +631,9 @@ ELangString.  LangString   ::= LangID NormalString ;
 rules         LangID       ::= ":" [LangLabel] ":";
 rules         LangLabel    ::= Ident ;
     separator nonempty LangLabel "," ;
+
+rules         CurrID       ::= ":" CurrLabel ":";
+rules         CurrLabel    ::= UIdent ;
 #+end_src
 
 **** String
@@ -981,10 +990,10 @@ Guess what, though. She holds dual Israeli and American citizenship. Unusual, ri
 #+begin_src haskell :noweb-ref l4entity
   ENTITY blackSwan
      ISA Human
-    WITH birthdate   = { xtime = 2020-09-10, value = 1981-06-09 }
+    WITH birthdate = { xtime = 2020-09-10, value = 1981-06-09 }
   //     a person can have multiple nationalities
-         nationality = [ { xtime = 2020-09-10, value = IL, vtime = 1981-06-09 to PRESENT }
-                       , { xtime = 2020-09-10, value = US                                } ]
+         nationality = [ { xtime = 2020-09-10, value = "IL", vtime = 1981-06-09 to PRESENT }
+                       , { xtime = 2020-09-10, value = "US"                                } ]
 #+end_src
 
 We assume that her Israeli citizenship began at birth, but Wikipedia doesn't know when she became a US citizen; all we know is that as of September 10 2020, Wikipedia said she is one. So that citizenship value doesn't define a vtime.
@@ -1004,6 +1013,7 @@ As you can see, the "multitemporal" syntax allows us to easily handle scenarios 
 
 #+begin_src haskell :noweb-ref l4entity
   ENTITY celebXY
+   GIVEN Tabloid HAVING ceaselessCoverage IS true
      ISA Couple
     WITH xtime = 2020-01-01, maritalStatus = dating
          xtime = 2020-07-01, maritalStatus = married
@@ -1062,13 +1072,13 @@ We use the "ASOF" keyword to give all the attributes a default ~xtime~ (transact
 
   ENTITY buyCabbage
      ISA ContractOfSale
-    ASOF 2020-09-10
     WITH date         = 2020-09-10
          jurisdiction = SG
          buyer        = blackSwan
          seller       = veggieBar
-         buyer.consideration = $10
+         buyer.consideration  = :USD: 10
          seller.consideration = [ item1, item2 ]
+    ASOF 2020-09-10
    WHERE item1 ISA  Item
                WITH category = "vegetable"
                     species  = "Brassica oleracea"
@@ -1082,12 +1092,12 @@ An alternative representation shows a trace of events:
 #+begin_src haskell :noweb-ref l4entity
   ENTITY genericContract
      ISA Scenario
-    ASOF 2020-09-10
     WITH parties      = [ blackSwan, veggieBar ]
          TRACE 2020-09-01T1210 blackSwan offers     offerDetails
                2020-09-01T1211 veggieBar accepts    offerDetails
                2020-09-01T1212 blackSwan pays       veggieBar $10
                2020-09-01T1213 veggieBar deliversTo blackSwan [ item1, item2 ]
+    ASOF 2020-09-10
    WHERE offerDetails = { blackSwan.consideration = $10
                         , veggieBar.consideration = [ item1, item2 ] }
          item1 ISA Item
@@ -1123,7 +1133,7 @@ Let's start with a super simple case.
 #+begin_src haskell :noweb-ref l4entity
   ENTITY spud1
      ISA Item
-    WITH species = "Solanum tuberosum"
+    WITH species  = "Solanum tuberosum"
          isEdible = true
 #+end_src
 
@@ -1168,7 +1178,7 @@ Suppose potatoes are so rare and prized that they come with certificates of prov
 #+begin_src haskell :noweb-ref l4-rules
   ENTITY spud2
      ISA Item
-    WITH species = "Solanum tuberosum"
+    WITH species  = "Solanum tuberosum"
          isEdible = true
          previousOwners = [ alice, bob, charlie, daryl ]
 #+end_src

@@ -30,4 +30,4 @@ RULE   "Sale Restricted"
    PARTY Seller
     MUST refund Amount
   BEFORE return.date + 3D
-   WHERE Amount = return.sale.cash * 90%
+   WHERE Amount == return.sale.cash * 90%
