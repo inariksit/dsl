@@ -8,7 +8,7 @@ RULE   "Sale Restricted"
        OR UNLIKELY P.hasExemption from:DirectorOfAgriculture
           HENCE Rule "Return Policy"
    WHERE
-      DEEM Item.isCabbage en:"is a cabbage"
+      DEEM Item IS Cabbage en:"is a cabbage"
            WHEN Item.faostat ~ "FCL ITEM 0358"
              OR (Item.category      ~ "vegetable"
                  AND Item.species   ~ ["Brassica chinensis", "Brassica oleracea"]

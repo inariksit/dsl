@@ -9,7 +9,7 @@ out/test1.out : l4/test1.l4 src/AbsL.hs
 	cat out/test1.out
 
 src/AbsL.hs : l4.bnfc
-	(cd src; bnfc ../l4.bnfc; rm TestL.hs)
+	(cd src; bnfc ../l4.bnfc > ../out/bnfc.out 2> ../out/bnfc.err || stack exec showbug ../l4.bnfc ../out/bnfc.out ../out/bnfc.err ; rm TestL.hs)
 	stack build
 
 l4/test1.l4 l4.bnfc : ../README.org

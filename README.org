@@ -10,293 +10,37 @@ We want to be able to translate natural-language contracts and laws to code, wit
 
 *** A Simple Law
 
-See [[https://github.com/smucclaw/complaw/blob/master/doc/ex-20200806-hello-world-rules/][the Potato case]].
+See [[https://github.com/smucclaw/complaw/blob/master/doc/ex-20200806-hello-world-rules/][the Potato case]], which illustrates constitutive rules.
+
+We introduce ontology.
 
 *** A Simple Contract
 
-See [[https://github.com/smucclaw/complaw/blob/master/doc/ex-jurix-20200814/][the Cabbage case]], which embeds a contract-like state graph.
+See [[https://github.com/smucclaw/complaw/blob/master/doc/ex-jurix-20200814/][the Cabbage case]], which embeds a contract-like state graph: the obligations of parties in time.
 
-** Underlying Logics and Concepts
+We introduce modal logics of deontics, temporals, and epistemics.
 
-We build on a combination of the lamdba, mu, and pi calculi. What would we do without the Greeks?
+*** A Simple Mathematical Expression: Lambda Calculus
 
-*** Temporals: Time
+Many contracts deal with dollar calculations. L4 supports composable primitives and functional idioms for mathematical expressions.
 
-We need to say things like: from T1 to T2, X was married to Y; from T3 to T4, X was married to Z. (OWL doesn't support this; it's timeless.)
+*** Formal Verification using Temporal Logics
 
-We want [[https://en.wikipedia.org/wiki/Temporal_database][multi-temporality]]: at time T1, party P believed that the legislation then in effect was L1; however, at time T3, party P realized that the legislation in effect at T1 was actually L2, having replaced L1 at time T2. However, L2 made provision that at time T1, the effective result for parties in P's situation would be as if L1 were in effect.
+*** Transpilation and Extraction to Operational Languages
 
-So, we need the usual temporal notions of deadlines, durations, relative and absolute time referents, repeating periods.
+*** Natural Langauge Generation
 
-- Temporals :: DMN refers to a standard temporal theory of before/overlap/after. We want to reconcile that with the Event and Situation calculi.
+** Introduction
 
-#+BEGIN_QUOTE
-*Comment MS:* I think there are two issues involved in the above discussion of multi-temporality:
-- the question how time evolves during the lifetime of a contract (assuming
-  that the rule set remains stable) and which actions are / have to be taken
-  at each moment by the parties involved. Formal models for this are Timed
-  Automata, Petri Nets etc. These generate / accept a set of traces, and one
-  can reason about them with temporal logics (LTL, CTL: "eventually / always",
-  "in some / all runs") or their timed variants (TCTL: "some time in the next
-  50 time units"). This technology is well understood at least in isolation,
-  but maybe not in conjunction with all the other features we need.
-- the question how the validity of a rule set changes over time. Seems closely
-  related to the question of metarules mentioned below. These seem extremely
-  difficult to deal with in full generality. A self-referential rule like
-  "This rule will not be valid in a month any more" looks like a variant of
-  the Liar's Paradox: Either the rule is still valid in a month (but
-  shouldn't be according to what it states), or it is not valid in a month
-  (but then there is no rule contradicting its validity, so as a rule
-  appearing in a contract, why shouldn't it be valid?). To avoid these
-  paradoxes, one would need a stratified set of rules, and a prover would have
-  to iterate several times over the rule set to determine the applicable rules.
-#+END_QUOTE
+*** How To Try It For Yourself
 
-#+begin_quote
-*Meng's thoughts*: Yes, that makes sense. What software already knows how to reason in this way?
-#+end_quote
+A web REPL? IDE support?
 
-*** Deontics: Obligations, Permissions, and Prohibitions
+*** Tutorials
 
-Meng thinks the whole Chisholm family of paradoxes is only a problem in a framework that doesn't define obligations in terms of breach.
+This section will link to standalone tutorials that work through case studies for common scenarios.
 
-"You gotta do X." "Or what?" "Or nothing." "Then I don't gotta do it, do I?"
-
-So, in Forrester's paradox, if the penalties for each level of murder -- gentle vs bloody -- are explicitly given in a partial order, then the paradox goes away.
-
-#+BEGIN_QUOTE
-*Comment MS:* I agree and hope we can do without explicitly using deontic
- logic. A rule R might say: "if condition C is met, you have to do A". If one
- reads this as an /obligation to do/ and not an /obligation to be/, one can
- give it an operational reading: if, in the current state, condition C is
- satisfied and I take action A, then I will get into a state of conformity
- with rule R. If I do not take action A, I will get into a state where I
- breach rule R. Other rules might say that there is a penalty for this breach,
- and I can explicitly reason about the costs: If I am late arriving at the
- airport, is it better to park the car in a non-parking zone and pay a fine or
- to miss the plane?
-
-Question: which kind of obligations do we have: /to do/ or /to be/?
-#+END_QUOTE
-
-#+begin_quote
-*Meng's thoughts: Right. Let's agree that we aren't going to do traditional SDL.
-
-We borrow some of the useful ideas of deontic logic, e.g. may Y => not must not Y.
-
-But we don't talk about "must be", we only talk about "must do".
-
-People have choice, the way people had choice in the Israeli daycare case: [[https://rady.ucsd.edu/faculty/directory/gneezy/pub/docs/fine.pdf]["A Fine is a Price"]].
-
-The gentle murderer gets 10 years in prison.
-
-The bloody murderer gets 20 years in prison.
-
-No problem.
-
-Hvitved takes this approach; chapter 2 talks about choice.
-#+end_quote
-
-*** Party
-
-The notion of party is complicated by the notion of "affiliates" and "subsidiaries". Also by the notion of a power of attorney, a trust, and other agent relationships.
-
-Sometimes a master agreement will establish a relationship between one group of companies and another group of companies. So we even get to employ the concept of transitive closure.
-
-See https://youtu.be/b6kkvvHfEOo?t=420 for a simple case of detecting such relations.
-
-*** States, Actions, and Events: 
-
-What LegalRuleML calls "maintenance" and "achievement" obligations.
-
-This is an opportunity to use LTL/CTL.
-
-*** Definitions and truth values
-
-What LegalRuleML calls "constitutive rules", as opposed to regulative or prescriptive rules. This is one place where we might talk about FOL and a choice of well-founded semantics vs the stable model semantics.
-
-The recent discourse about binary vs nonbinary genders gives a good opportunity to talk about binary vs ternary logics.
-
-*** Default logic
-
-See section below on Rules and Metarules.
-
-*** Defeasible Logic
-
-Do we really need explicit defeasibility?
-
-*** Subjective Perspective:
-
-I want our epistemic theory to be able to express "X thinks Y thinks Z is true."
-
-Or, "Interpretation /I1/ of this text assigns one set of truth values to the following formula; Interpretation /I2/ assigns a different set, and so on."
-
-In 2020 it seems appropriate for a KRR system to admit multiple points of view, rather than to hold to set of global, universal truths. If the parties "agree to disagree", our "artificial intelligence" should not be flummoxed: “The test of a first-rate intelligence,” he said, “is the ability to hold two opposed ideas in the mind, at the same time, and still retain the ability to function.” https://quoteinvestigator.com/2020/01/05/intelligence/
-
-Within the text, a grammar of epistemic modals should handle this.
-
-In the interpreter, we might rely on answer-set-programming or SAT to construct multiple interpretive universes. Ambiguous interpretations of source text could simply show up as branching alternatives.
-
-*** Space: "Jurisdiction"
-
-Different countries have different defaults and interpretational conventions.
-
-A clause may be enforceable in one jurisdiction but not in another.
-
-Enforceability is a judgement to be applied late in the compilation process.
-
-*** Specificity: Intensionality and Extensionality
-
-- "No party who qualifies under section 12 may ..."
-
-- "Alice Apple, of 1 Address Point, specifically may ..."
-
-So the quantifiers of FOL are relevant here.
-
-*** Counterfactuals: hypothetical specification with some variable set to other than what it is
-
-The Weekend Dinner price of a dish is 1.5 times what the price of the dish would have been if it were served for Weekday Lunch.
-
-#+begin_example
-DEEM              dish.price(weekend=true,  period=dinner) =
-     hypothetical(dish.price(weekend=false, period=lunch)) * 1.5
-#+end_example
-
-This looks simple enough. Is it really necessary to wrap it in a "hypothetical"? Maybe yes, maybe no.
-
-What if the computation actually depends on a whole bunch of State? In fact, it could get worse -- it could depend on the call stack:
-
-*** Examination of Call Stack
-
-While this is not recommended, some styles of drafting say:
-
-Definition of X:
-- for the purposes of P1, X is X1;
-- for the purposes of P2, X is X2;
-- however, if the use of this variable X causes some Y to be negative, then X shall be the nearest number needed for Y to be non-negative.
-
-This "easier said than done" sentence gets us into constraint programming and linear equations.
-
-What if purpose P1 stacks a hypothetical purpose P2 in its call to X?
-
-We need a meta-rule along the lines of /lex specialis/ which tells us that in such a situation P2 is located closer in the call stack to X than P1.
-
-*** Natural Language Support
-
-This isn't strictly a logical matter, but if we are to extract (controlled) natural language isomorphisms we will need ways to annotate the L4 syntax with hints. In particular, idioms (in NL) and functions/macros (in L4) are a way of compacting longer expressions into shorter, reusable versions.
-
-*** Macros and Functions
-
-"Homoiconicity" refers to the idea that a program may modify itself. Contracts and laws frequently include "pragma" and "macro" type statements intended to influence interpretation.
-
-*** <<<Rules and Metarules>>>
-
-If multiple rules ostensibly conflict, that just means they are really only rule fragments, and need to be resolved by composition into a larger coherent rule.
-
-Laws are sometimes written as if the drafters were drunk:
-
-#+begin_example
-1. Section 1.
-   1. The speed limit is 100.
-   2. No person may exceed the speed limit.
-   3. Any person who may exceed the speed limit shall pay a fine of $100 for every 10 kph above the speed limit.
-   4. The speed limit is 80 when it is raining.
-   5. The speed limit may be increased beyond 100 during clear weather in daytime.
-   6. Nothing in this section 1 shall allow a speed greater than 120.
-#+end_example
-
-Read literally, these rules all contradict each other. They need to be read together in context:
-
-#+begin_src haskell
-  type Raining = Bool
-  type Daytime = Bool
-  speedlimit :: Raining -> Daytime -> Int
-  speedlimit False False = 100
-  speedlimit False True  = 120
-  speedlimit True  _     = 80
-#+end_src
-
-Sometimes people talk about "default logic". In conventional programming, defaults go at the end.
-
-#+begin_src python
-  def speedlimit (raining, daytime):
-      if raining: return 80
-      if daytime: return 120
-      return             100
-#+end_src
-
-In legal drafting, the order is inverted: defaults go at the top; exceptions appear below; exceptions to exceptions appear farther below.
-
-*** Explainability
-
-"Show your work: explain to me all the reasons that the outcome was calculated as it was."
-
-The Youtube link above to Coherent Knowledge's Ergo for Financial Regulation demo around Reg W is a good example of what explanation should look like, at least for a datalog-type query.
-
-See also: the New Zealand rates rebates case
-https://github.com/smucclaw/complaw/blob/master/doc/ex-nz-rates-20200909/aotearoa-haskell
-
-#+begin_example
-mengwong@solo-wmw ~/src/smucclaw/complaw/doc/ex-nz-rates-20200909/aotearoa-haskell $ stack exec aotearoa-exe -- combined_income=20000 dependants=0 rates_total=2000 additional_per_dependant=500 initial_contribution=160 maximum_allowable=630 income_threshold=25180 --goal=l4/from-openfisca-rr.l4 --nlgstyle=concrete
-showing how we obtain the answer
-630.00 -- which is
-  the greater of
-  simply 0.00
-  and
-  630.00 -- which is
-    the lesser of
-    1874.67 -- which is
-      the difference between
-      1840.00 -- which is
-        the difference between
-        2000.00 -- which is
-          rates_total, the rates payable for that rating year in respect of the property
-        and
-        160.00 -- which is
-          initial_contribution, the initial contribution by ratepayer
-      and
-      -34.67 -- which is
-        the sum of
-        613.33 -- which is
-          the quotient given by
-          1840.00 -- which is
-            the difference between
-            2000.00 -- which is
-              rates_total, the rates payable for that rating year in respect of the property
-            and
-            160.00 -- which is
-              initial_contribution, the initial contribution by ratepayer
-          divided by
-          simply 3.00
-        with
-        -648.00 -- which is
-          $1 for each $8 in
-          -5180.00 -- which is
-            the difference between
-            20000.00 -- which is
-              combined_income, the ratepayer's income for the preceding tax year
-            and
-            25180.00 -- which is
-              the sum of
-              0.00 -- which is
-                the product of
-                0.00 -- which is
-                  dependants, person who was a dependant of the ratepayer
-                multiplied by
-                500.00 -- which is
-                  additional_per_dependant, the additional allowable income per dependant
-              with
-              25180.00 -- which is
-                income_threshold, the income threshold
-    and
-    630.00 -- which is
-      maximum_allowable, the maximum rebate allowed
-
-#+end_example
-
-See also: argumentation theory.
-
-** Libraries for Genres:
+*** Libraries for Genres:
 
 Each of these genres requires a library -- a "sub-domain ontology".
 
@@ -304,244 +48,19 @@ Each of these genres requires a library -- a "sub-domain ontology".
 - Real Estate ::
 - City Planning :: 
 
-** Formal Verification
+*** Formal Verification
 
 How to perform static analysis on the programs.
 
-** Natural Language Generation
+*** Natural Language Generation
 
 How to compile to natural languages.
 
 
 
-** How To Try It For Yourself
-
-A web REPL? IDE support?
-
 ** How To Contribute
 
 Github issues.
-
-** Introduction
-
-** Tutorials
-
-This section will link to standalone tutorials that work through case studies for common scenarios.
-
-** Compiler Documentation
-
-*** Stages
-
-**** Lexing
-
-handled by BNFC
-
-**** Parsing to Abstract Syntax Tree
-
-handled by BNFC
-
-**** Validation Stage 1
-
-- build a lexical symbol table of defined terms
-- Are all defined terms used?
-- Identify all undefined terms (which, presumably, would become interview questions in an abductive reasoner)
-- distinguish between declared and defined terms
-
-**** Metaprogramming
-
-Any reference to "he" in this document shall be read as "she" where appropriate.
-
-Nothing in this rule shall limit the right to xxx
-
-**** Validation Stage 2
-
-**** Numbering Resolution
-
-**** Cross-Reference Resolution
-
-**** Versioning Resolution
-
-A current rule may refer to an obsolete rule as part of a hypothetical evaluation: /the benefit defined by this rule shall be no lesser than the benefit afforded by any previous version of this rule./
-
-is a clumsy but compact way of saying, evaluate the current rule, evaluate the old rules, and take the max. This requires, in turn, that the old rules be resolvable using the same inputs available to the current rule. If that is not possible, the reasoner needs to raise an error, or ask what to do to handle that situation.
-
-
-*** Intermediate Representation
-
-So! Thanks to BNFC we have things in Haskell datatypes. That's our abstract representation.
-
-And then we massage those types a bit. We did some validation, verification, inferencing, maybe some rewriting and transformation.
-
-Next we turn those things into concrete outputs.
-
-
-*** Output Targets
-
-**** Prolog
-
-The transformation looks like this:
-
-- input :: Rule ... Given X ... DEEM X.foo WHEN X.bar AND X.baz
-- output :: foo(X) :- bar(X), baz(X).
-
--#+BEGIN_QUOTE
- *Comment MS:* Does =DEEM= always define a rule (logically speaking: an
- implication), or is there also a mechanism for /definitions/, such as for
- example in the Catala language (which is an equivalence, logically
- speaking)? In the above example, when knowing =X.foo=, one cannot infer that
- =X.bar=. 
--#+END_QUOTE
-
-#+begin_src haskell :tangle bnfc/prolog/ToProlog.hs
-  module ToProlog where
-
-  import Data.Char (isUpper, isLower, toTitle, toLower)
-  import AbsL
-  import Data.List (intercalate)
-
-  class ToProlog a where
-    toProlog :: a -> String
-
-  instance ToProlog Rules where
-    toProlog (Toplevel toplevels) =
-      unlines $ toProlog <$> toplevels
-
-  instance ToProlog Toplevels where
-    toProlog (ToplevelsRule rule) = toProlog rule
-    toProlog (ToplevelsModule m)   = show m
-    toProlog (ToplevelsImport i)   = show i
-    toProlog (ToplevelsPragma p)   = show p
-
-  instance ToProlog Rule where
-    toProlog (RuleStanza ruledef rulebody) =
-      unlines [ unwords [ "%% ruleDef:",   show ruledef ]
-              , unwords [ "%% ruleBody:",  show rulebody ]
-              , unwords [ toProlog rulebody ]
-              ]
-
-  instance ToProlog RuleBody where
-    toProlog RBNoop = "%% NOOP lol"
-    toProlog (RBDeem objattrands predexpr) = unlines $
-      (\(ObjAttrAnd1 objAttr) -> unwords [ toProlog objAttr
-                                         , ":-"
-                                         , toProlog predexpr ++ "." ])
-      <$> objattrands
-
-  #+end_src
-
-Lot of heavy lifting happens in an ObjAttr "token":
-
-| objattr       | prolog        | remark                                         |
-|---------------+---------------+------------------------------------------------|
-| One.two       | two(One)      | boolean horn                                   |
-| One.Two       | two(One,Two)  | Two contains a value for subsequent processing |
-| one.two       | one.two       | atom                                           |
-| one.Two       | one.Two       | atom                                           |
-| one.two.three | one.two.three | atom; should we consider unpacking?            |
-
-Things can get more complicated in Flora-2.
-
-See also https://www.swi-prolog.org/pldoc/man?section=bidicts for an alternative approach we might consider.
-
-  #+begin_src haskell :tangle bnfc/prolog/ToProlog.hs
-    instance ToProlog ObjAttr where 
-      toProlog (OA_method oa commalist) = toProlog oa ++ "(" ++ toProlog commalist ++ ")"
-      toProlog (OA_dots objAttrElems) =
-        case asVar objAttrElems of
-          (inside, outside, Just asvar) -> outside ++ "(" ++ intercalate "," [inside, asvar] ++ ")"
-          (inside, outside, Nothing)    -> outside ++ "(" ++ inside ++ ")"
-
-    asVar :: [ObjAttrElem] -> (String, String, Maybe String)
-    asVar objAttrElems =
-       let oalist = toProlog <$> objAttrElems
-           outside = last oalist
-           inside  = head oalist
-        in
-        if and [ length oalist == 2
-               , isUpper . head $ outside
-               , isUpper . head $ inside ]
-        then (inside, lcfirst outside, Just $ titleCase outside)
-        else (inside, lcfirst outside, Nothing)
-        where titleCase "" = ""
-              titleCase (x:xs) = toTitle x : xs
-              lcfirst "" = ""
-              lcfirst (x:xs) = toLower x : xs
-       
-
-    instance ToProlog ObjAttrElem where 
-      toProlog (ObjAttrElemIdent (Ident oaeii)) = oaeii
-
-    instance ToProlog PredExpr where 
-      toProlog (PEOA oa)  = toProlog oa
-      toProlog (PEAnd exp1 exp2) = toProlog exp1 ++ ", " ++ toProlog exp2
-      toProlog (PEOr  exp1 exp2) = toProlog exp1 ++ ", " ++ toProlog exp2
-      toProlog (PEME  matchexp)  = toProlog matchexp
-
-    instance ToProlog MatchExpr where
-      toProlog (ME_OA_JL oa@(OA_dots oaes) jl) =
-        case asVar oaes of
-          (inside, outside, Just asvar) -> intercalate ", " [ toProlog oa, "match(" ++ asvar, toProlog jl ++ ")" ]
-          (inside, outside, Nothing)    -> "%% not sure what to do here"
-      toProlog (ME_OA_JL oa jl) = "%% unable to render a match against a junctionlist because the object-attribute doesn't look like Upper.lower"
-      toProlog (ME_True)        = "true"
-      toProlog (ME_False)       = "false"
-
-    instance ToProlog JunctionList where
-      toProlog (JL_Comma l) = "plain, [" ++ toProlog l ++ "]"
-      toProlog (JL_And   l) =   "and, [" ++ toProlog l ++ "]"
-      toProlog (JL_Or    l) =    "or, [" ++ toProlog l ++ "]"
-      toProlog (JL_Xor   (XorList l)) -- you can take out the plain bit when the xor match in prolog is working properly
-        | length l == 1       = "plain, [" ++ toProlog (XorList l) ++ "]"
-        | otherwise           =   "xor, [" ++ toProlog (XorList l) ++ "]"
-
-    instance ToProlog CommaList where
-      toProlog (CommaList  l) = intercalate ", " $ toProlog <$> l
-    instance ToProlog   AndList where toProlog (  AndList l) = intercalate ", " $ toProlog <$> l
-    instance ToProlog    OrList where toProlog (   OrList l) = intercalate ", " $ toProlog <$> l
-    instance ToProlog   XorList where toProlog (  XorList l) = intercalate ", " $ toProlog <$> l
-
-    instance ToProlog CommaElem where
-      toProlog (CommaElemObjAttr oa) = toProlog oa
-      toProlog (CommaElemString  oa) = show oa
-    instance ToProlog   AndElem where
-      toProlog (  AndElemObjAttr oa) = toProlog oa
-      toProlog (  AndElemString  oa) = show oa
-    instance ToProlog    OrElem where
-      toProlog (   OrElemObjAttr oa) = toProlog oa
-      toProlog (   OrElemString  oa) = show oa
-    instance ToProlog   XorElem where
-      toProlog (  XorElemObjAttr oa) = toProlog oa
-      toProlog (  XorElemString  oa) = show oa
-
-#+end_src
-
-Some helper functions
-  #+begin_src prolog :tangle bnfc/prolog/prelude.pl
-    % this file is autogenerated! -*- prolog -*-
-    % 1. tangle dsl/README.org using C-c C-v C-t
-    % 2. run (cat prelude.pl; ./mkProlog test1.l4) > potato.pl
-
-    :- use_module(library(yall)).
-
-    match(Elem, or,  List)   :- member(Elem, List).
-    match(Elem, and, List)   :- maplist(  [X]>>myeq(X,Elem), List).
-    match(Elem, xor, List)   :- partition([X]>>myeq(X,Elem), List, In, _Out), length(In,L), L = 1.
-    match(Elem, plain, List) :- match(Elem, or, List).
-    myeq(A,B) :- A == B.
-    
-    % set up a couple of test potatoes
-    species(potato1, "Solanum tuberosum").
-    species(potato2, "Ipomoea batatas").
-
-  #+end_src
-
-**** Flora-2
-
-**** Python for DocAssemble
-
-**** Javascript because Javascript is everywhere, like bacteria on your skin
-
-
 
 ** Reference Manual and BNFC specification
 
@@ -589,6 +108,8 @@ An L4 Project contains one or more modules.
 
 *** Modules and Structure
 
+Modules offer namespaces. The import and export syntax borrows from Haskell.
+
 An L4 Module is a file.
 
 The /default name/ of the module is derived from its import statement, minus any ~.l4*~ extension.
@@ -597,9 +118,9 @@ The following import statements result in the following default module names:
 
 | import                                          | default name |
 |-------------------------------------------------+--------------|
-| =import "Foo/Bar/Baz.l4"=                       | Foo.Bar.Baz  |
-| =import "/usr/local/share/L4/./Foo/Bar/Baz.l4"= | Foo.Bar.Baz  |
-| =import "test/./Foo/Bar/Baz.l4"=                | Foo.Bar.Baz  |
+| ~import "Foo/Bar/Baz.l4"~                       | Foo.Bar.Baz  |
+| ~import "/usr/local/share/L4/./Foo/Bar/Baz.l4"~ | Foo.Bar.Baz  |
+| ~import "test/./Foo/Bar/Baz.l4"~                | Foo.Bar.Baz  |
 
 The default name is made by 
 - deleting any prefix matching the regex ~^.*/\.+/~
@@ -676,7 +197,151 @@ A numbering directive instructs the output engine to reset the autonumbering to 
 
 An L4 statement is one of the following:
 
-**** Entities and Knols
+**** Rules
+
+#+begin_src bnfc :noweb-ref l4rules
+
+  rules      RuleDef   ::= RuleNum | RuleID | RuleName
+                         | RuleNum   RuleID 
+                         | RuleNum            RuleName
+                         |           RuleID   RuleName
+                         | RuleNum   RuleID   RuleName ;
+  rules      RuleID    ::= ObjAttr ;
+  RName.     RuleName  ::= LangStrings ;
+  RNum.      RuleNum   ::= Integer;
+
+  Rule.      Rule      ::= "RULE" RuleDef RuleBody;
+  RBNoop.    RuleBody  ::= "NOOP";
+
+#+end_src
+
+***** Deem
+
+#+begin_src bnfc :noweb-ref l4rules
+  -- DEEM Potato IS noble WHEN ownersAreNoble
+  RBis.     RuleBody  ::= "DEEM"  ObjAttr     "IS"  [ObjAttrAnd] WhenPred WhereExpr;
+  RBare.    RuleBody  ::= "DEEM" [ObjAttrAnd] "ARE" [ObjAttrAnd] WhenPred WhereExpr;
+
+  -- DEEM Potato ISA DiscountItem WHEN CurrentDate ~ Weekend
+  RBisa.    RuleBody  ::= "DEEM"  ObjAttr     "ISA" [ObjAttrAnd] WhenPred WhereExpr;
+
+  -- DEEM Potato HAS discount = 20% WHEN CurrentDate WITHIN 1 week OF ExpirationDate
+  RBhas.    RuleBody  ::= "DEEM"  ObjAttr     "HAS" [ObjAttrAnd] WhenPred WhereExpr;
+
+  separator nonempty ObjAttrAnd "AND";
+  OBAnd.    ObjAttrAnd ::= ObjAttr ;
+
+#+end_src
+
+***** Constraint Expressions
+
+Constraint Expressions are used both to evaluate truth values as part of a reasoning operation, and to assign values immutably.
+
+#+begin_src bnfc :noweb-ref l4rules
+  rules      WhenPred ::= | "WHEN" PredExpr ;
+
+  -- ... WHEN  
+  PEUnify.   PredExpr  ::= UnifyExpr;
+  PEAnd.     PredExpr  ::= PredExpr "AND" PredExpr;
+  PEOr.      PredExpr  ::= PredExpr "OR"  PredExpr;
+  PEME.      PredExpr1 ::= MatchExpr;
+  PELikely.  PredExpr2 ::= Likelihood PredExpr ;
+  _.         PredExpr2 ::= "(" PredExpr ")";
+  coercions PredExpr 2;
+  -- do we really need to say coercions?
+#+end_src
+
+The term syntax allows unification expressions where a plain term would normally go.
+
+#+begin_src bnfc :noweb-ref l4rules
+  rules      UnifyExpr ::= [UnifyElem] | Numberlike ;
+  rules      UnifyElem ::= ObjAttrElem
+                        |  UnifyBracket
+                        |  UnifyStar;
+  separator nonempty UnifyElem ".";
+  rules      UnifyStar ::= "*" ;
+  rules      UnifyBracket ::= "[" CommaList "]" ;
+#+end_src
+
+***** Match Expressions and their primitives
+
+#+begin_src bnfc :noweb-ref l4rules
+  ME_OA_JL.  MatchExpr  ::= UnifyExpr "~" JunctionList ;
+  ME_OA_Bin. MatchExpr  ::= UnifyExpr BinOp UnifyExpr ;
+  ME_True.   MatchExpr  ::= "True";
+  ME_False.  MatchExpr  ::= "False";
+
+  -- similar to CLP #=
+  rules      BinOp      ::= "+" | "-" | "*" | "/" | "<" | ">" | "<=" | ">=" | "==" | "IS" | "ISA" | "ARE";
+
+  rules      Numeric    ::= Integer | Double ;
+  rules      Numberlike   ::= "$" Numeric
+                            | Numeric ;
+#+end_src
+
+***** Weighted Branches
+
+A constraint expression can be labeled as LIKELY or UNLIKELY to serve as a hint to a reasoner.
+
+#+begin_src bnfc :noweb-ref l4rules
+  rules      Likelihood  ::= | "LIKELY" | "UNLIKELY";
+#+end_src
+
+***** Junction Lists
+
+#+begin_src bnfc :noweb-ref l4rules
+
+  JL_And.    JunctionList ::= "["   AndList "]" ;
+  JL_Or.     JunctionList ::= "["    OrList "]" ;
+  JL_Xor.    JunctionList ::= "["   XorList "]" ;
+  JL_Comma.  JunctionList ::= "[" CommaList "]" ;
+
+  -- some work to be done here -- the and, or, xor lists have to have at least 2 elements
+  -- if there's only one element it's a plain list
+
+  CommaList.  CommaList ::= [CommaElem];
+  rules      CommaElem ::= ObjAttr | String;
+  separator nonempty CommaElem ",";
+
+  AndList.   AndList ::= [AndElem];
+  rules      AndElem ::= ObjAttr | String;
+  separator nonempty AndElem "&";
+
+  XorList.   XorList ::= [XorElem];
+  rules      XorElem ::= ObjAttr | String;
+  separator nonempty XorElem "|";
+
+  OrList.    OrList ::= [OrElem];
+  rules      OrElem ::= ObjAttr | String;
+  separator nonempty OrElem "|";
+
+#+end_src
+
+***** term primitives
+
+#+begin_src bnfc :noweb-ref l4rules
+
+  rules      ObjAttrElem  ::= Ident | UIdent ;            -- Foo
+
+  OA_dots.   ObjAttr      ::= [ObjAttrElem];              -- Foo.Bar.Baz
+  OA_method. ObjAttr      ::= ObjAttr "(" CommaList ")" ; -- Foo.Bar(Baz, Quux)
+  separator nonempty ObjAttrElem ".";
+
+  rules      KeyVal     ::= ObjAttr ":" ObjAttr
+                          | ObjAttr "=" ObjAttr
+                          | ObjAttr "=" String
+                          | ObjAttr "=" Numberlike
+                          | ObjAttr "=" BraceList
+                          | ObjAttr "=" ArrayOfBraces
+                          | ObjAttr "=" JunctionList
+                          | ObjAttr "=" DateTime 
+                          | ObjAttr "=" DateTime "to" DateTime;
+  separator nonempty KeyVal ",";
+
+
+#+end_src
+
+***** Rules: ENTITIES
 
 #+begin_src bnfc :noweb-ref l4rules
   Entity.    Entity    ::= "ENTITY" ObjAttr
@@ -730,109 +395,8 @@ An L4 statement is one of the following:
 
   token YYYYMMDD      ( digit digit digit digit '-'? digit digit '-'? digit digit );
   token YYYYMMDDTHHMM ( digit digit digit digit '-'? digit digit '-'? digit digit 'T' digit digit digit digit );
-#+end_src
 
-**** A Rule Statement
-
-#+begin_src bnfc :noweb-ref l4rules
-
-  rules      RuleDef   ::= RuleNum | RuleID | RuleName
-                         | RuleNum   RuleID 
-                         | RuleNum            RuleName
-                         |           RuleID   RuleName
-                         | RuleNum   RuleID   RuleName ;
-  rules      RuleID    ::= ObjAttr ;
-  RName.     RuleName  ::= LangStrings ;
-  RNum.      RuleNum   ::= Integer;
-
-  RuleStanza.  Rule      ::= "RULE" RuleDef RuleBody;
-
-  RBNoop.    RuleBody  ::= "NOOP";
-
-  -- DEEM Item.isPotato AND Item.isVegetable WHEN ...
-  RBDeem.    RuleBody  ::= "DEEM" [ObjAttrAnd] "WHEN" PredExpr;
-  RBTOBE.    RuleBody  ::= "DEEM" ObjAttr "TOBE" ObjAttr "WHEN" PredExpr;
-  separator nonempty ObjAttrAnd "AND";
-  ObjAttrAnd1. ObjAttrAnd ::= ObjAttr ;
-
-  -- ... WHEN  
-  PEUnify.   PredExpr  ::= UnifyExpr;
-  PEAnd.     PredExpr  ::= PredExpr "AND" PredExpr;
-  PEOr.      PredExpr  ::= PredExpr "OR"  PredExpr;
-  PEME.      PredExpr1 ::= MatchExpr;
-  _.         PredExpr2 ::= "(" PredExpr ")";
-  coercions PredExpr 2;
-  -- do we really need to say coercions?
-
-  rules      UnifyExpr ::= [UnifyElem];
-  rules      UnifyElem ::= ObjAttrElem
-                        |  UnifyBracket
-                        |  UnifyStar;
-  separator nonempty UnifyElem ".";
-  rules      UnifyStar ::= "*" ;
-  rules      UnifyBracket ::= "[" CommaList "]" ;
-
-  rules      FancyBoolOp ::= PlainBoolOp Likelihood;
-
-  rules      PlainBoolOp ::= "AND" | "OR" ;
-
-  rules      Likelihood  ::= "" | "LIKELY" | "UNLIKELY";
-
-  -- need more cases -- junctionlists
-  ME_OA_JL.  MatchExpr  ::= UnifyExpr "~" JunctionList ;
-  ME_OA_Bin. MatchExpr  ::= UnifyExpr BinOp Numberlike ;
-  ME_True.   MatchExpr  ::= "True";
-  ME_False.  MatchExpr  ::= "False";
-
-  rules      BinOp      ::= "+" | "-" | "*" | "/" | "<" | ">" | "<=" | ">=" | "==";
-
-  rules      Numeric    ::= Integer | Double ;
-
-  rules      Numberlike   ::= "$" Numeric
-                            | Numeric ;
-
-  JL_And.    JunctionList ::= "["   AndList "]" ;
-  JL_Or.     JunctionList ::= "["    OrList "]" ;
-  JL_Xor.    JunctionList ::= "["   XorList "]" ;
-  JL_Comma.  JunctionList ::= "[" CommaList "]" ;
-
-  -- some work to be done here -- the and, or, xor lists have to have at least 2 elements
-  -- if there's only one element it's a plain list
-
-  CommaList.  CommaList ::= [CommaElem];
-  rules      CommaElem ::= ObjAttr | String;
-  separator nonempty CommaElem ",";
-
-  AndList.   AndList ::= [AndElem];
-  rules      AndElem ::= ObjAttr | String;
-  separator nonempty AndElem "&";
-
-  XorList.   XorList ::= [XorElem];
-  rules      XorElem ::= ObjAttr | String;
-  separator nonempty XorElem "|";
-
-  OrList.    OrList ::= [OrElem];
-  rules      OrElem ::= ObjAttr | String;
-  separator nonempty OrElem "|";
-
-  rules      ObjAttrElem  ::= Ident | UIdent ;            -- Foo
-
-  OA_dots.   ObjAttr      ::= [ObjAttrElem];              -- Foo.Bar.Baz
-  OA_method. ObjAttr      ::= ObjAttr "(" CommaList ")" ; -- Foo.Bar(Baz, Quux)
-  separator nonempty ObjAttrElem ".";
-
-  rules      KeyVal     ::= ObjAttr ":" ObjAttr
-                          | ObjAttr "=" ObjAttr
-                          | ObjAttr "=" String
-                          | ObjAttr "=" Numberlike
-                          | ObjAttr "=" BraceList
-                          | ObjAttr "=" ArrayOfBraces
-                          | ObjAttr "=" JunctionList
-                          | ObjAttr "=" DateTime 
-                          | ObjAttr "=" DateTime "to" DateTime;
-  separator nonempty KeyVal ",";
-
-
+  -- WHEN X WITHIN Y OF Z
 #+end_src
 
 **** Text Examples
@@ -887,7 +451,7 @@ RULE   "Sale Restricted"
        OR UNLIKELY P.hasExemption from:DirectorOfAgriculture
           HENCE Rule "Return Policy"
    WHERE
-      DEEM Item.isCabbage en:"is a cabbage"
+      DEEM Item IS Cabbage en:"is a cabbage"
            WHEN Item.faostat ~ "FCL ITEM 0358"
              OR (Item.category      ~ "vegetable"
                  AND Item.species   ~ ["Brassica chinensis", "Brassica oleracea"]
@@ -1468,7 +1032,9 @@ An attribute may also be /epistemic/:
 
 There should be as many xtimes as there are knowers.
 
-*** Querying Objects and Attributes
+*** Inference: Querying Objects and Attributes
+
+
 
 We can ask fine-grained questions like:
 - On a given date, what did entity E, or The Public, or The System generally, believe to be true about some entity E, or some unit of knowledge K?
@@ -1574,17 +1140,17 @@ Now we can run Rule2 on it.
 
 #+begin_src text :noweb-ref l4-rules
   RULE 2 edible
-   DEEM Item.isEdiblePotato
-    AND Item.isTastyFood
-    WHEN Item.isPotato
-     AND Item.isEdible
+   DEEM Item IS EdiblePotato
+            AND TastyFood
+    WHEN Item IS Potato
+     AND Item IS Edible
 #+end_src
 
 Rule 2 relies on rule 3. This is backward chaining.
   
 #+begin_src text :noweb-ref l4-rules
   RULE 3 isPotato
-    DEEM Item.isPotato
+    DEEM Item IS Potato
     WHEN Item.species ~ ["Solanum tuberosum" | "Mister Potatohead"]
 
   // an OR-LIST expands to
@@ -1645,11 +1211,13 @@ There are a couple ways to say that. This is one way:
 #+begin_src haskell :noweb-ref l4-rules
 
   RULE noblePotato
-    DEEM Item.isNoble
-    WHEN Item.isPotato
+    DEEM Item IS Noble
+    WHEN Item ISA Potato
      AND Item.previousOwners.First.isNoble
      AND Item.previousOwners.Second.isNoble
 #+end_src
+
+(Maybe this also creates an automatic Item.isNoble?)
 
 That translates to:
 
@@ -1660,24 +1228,11 @@ That translates to:
                    First != Second.
 #+end_src
 
-BTW, we can do subclassing like this:
-
-#+begin_src haskell :noweb-ref l4-rules
-  RULE isPotato
-    DEEM Item
-    TOBE Potato
-    WHEN Item.isPotato
-#+end_src
-
-Note that this syntax inverts the usual direction of DEEMing used elsewhere -- Potato extends Item.
-
-(Maybe this also creates an automatic Item.isPotato?)
-
 This allows us to subsequently use the term Potato instead of Item:
 
 #+begin_src haskell :noweb-ref l4-rules
   RULE noblePotato2
-    DEEM Potato.isNoble
+    DEEM Potato IS Noble
     WHEN Potato.previousOwners.*.isNoble >= 2
 #+end_src
 
@@ -1685,8 +1240,8 @@ Alternative syntax:
 
 #+begin_src haskell :noweb-ref l4-rules
   RULE noblePotato3
-    DEEM Potato.isNoble
-    WHEN Potato.previousOwners.[Owner1,Owner2].isNoble
+    DEEM Potato IS Noble
+    WHEN Potato.previousOwners.[Owner1,Owner2] IS Noble
 #+end_src
 
 *** Library: ContractLaw
@@ -1782,6 +1337,502 @@ Then it parses the sample L4 code into out/test1.out
 #+begin_src sh
 $ ghcid --command "stack ghci" ./mkProlog.hs
 #+end_src
+
+** Detailed Compiler Documentation
+
+*** Stages
+
+**** Lexing
+
+handled by BNFC
+
+**** Parsing to Abstract Syntax Tree
+
+handled by BNFC
+
+**** Validation Stage 1
+
+- build a lexical symbol table of defined terms
+- Are all defined terms used?
+- Identify all undefined terms (which, presumably, would become interview questions in an abductive reasoner)
+- distinguish between declared and defined terms
+
+**** Metaprogramming
+
+Any reference to "he" in this document shall be read as "she" where appropriate.
+
+Nothing in this rule shall limit the right to xxx
+
+**** Validation Stage 2
+
+**** Numbering Resolution
+
+**** Cross-Reference Resolution
+
+**** Versioning Resolution
+
+A current rule may refer to an obsolete rule as part of a hypothetical evaluation: /the benefit defined by this rule shall be no lesser than the benefit afforded by any previous version of this rule./
+
+is a clumsy but compact way of saying, evaluate the current rule, evaluate the old rules, and take the max. This requires, in turn, that the old rules be resolvable using the same inputs available to the current rule. If that is not possible, the reasoner needs to raise an error, or ask what to do to handle that situation.
+
+
+*** Intermediate Representation
+
+So! Thanks to BNFC we have things in Haskell datatypes. That's our abstract representation.
+
+And then we massage those types a bit. We did some validation, verification, inferencing, maybe some rewriting and transformation.
+
+Next we turn those things into concrete outputs.
+
+
+*** Output Targets
+
+**** Prolog
+
+The transformation looks like this:
+
+- input :: Rule ... Given X ... DEEM X.foo WHEN X.bar AND X.baz
+- output :: foo(X) :- bar(X), baz(X).
+
+-#+BEGIN_QUOTE
+ *Comment MS:* Does =DEEM= always define a rule (logically speaking: an
+ implication), or is there also a mechanism for /definitions/, such as for
+ example in the Catala language (which is an equivalence, logically
+ speaking)? In the above example, when knowing =X.foo=, one cannot infer that
+ =X.bar=. 
+-#+END_QUOTE
+
+#+begin_src haskell :tangle bnfc/prolog/ToProlog.hs
+  module ToProlog where
+
+  import Data.Char (isUpper, isLower, toTitle, toLower)
+  import AbsL
+  import Data.List (intercalate)
+
+  class ToProlog a where
+    toProlog :: a -> String
+
+  instance ToProlog Rules where
+    toProlog (Toplevel toplevels) =
+      unlines $ toProlog <$> toplevels
+
+  instance ToProlog Toplevels where
+    toProlog (ToplevelsRule rule) = toProlog rule
+    toProlog (ToplevelsModule m)   = show m
+    toProlog (ToplevelsImport i)   = show i
+    toProlog (ToplevelsPragma p)   = show p
+
+  instance ToProlog Rule where
+    toProlog (RuleStanza ruledef rulebody) =
+      unlines [ unwords [ "%% ruleDef:",   show ruledef ]
+              , unwords [ "%% ruleBody:",  show rulebody ]
+              , unwords [ toProlog rulebody ]
+              ]
+
+  instance ToProlog RuleBody where
+    toProlog RBNoop = "%% NOOP lol"
+    toProlog (RBDeem objattrands predexpr) = unlines $
+      (\(ObjAttrAnd1 objAttr) -> unwords [ toProlog objAttr
+                                         , ":-"
+                                         , toProlog predexpr ++ "." ])
+      <$> objattrands
+
+  #+end_src
+
+Lot of heavy lifting happens in an ObjAttr "token":
+
+| objattr       | prolog        | remark                                         |
+|---------------+---------------+------------------------------------------------|
+| One.two       | two(One)      | boolean horn                                   |
+| One.Two       | two(One,Two)  | Two contains a value for subsequent processing |
+| one.two       | one.two       | atom                                           |
+| one.Two       | one.Two       | atom                                           |
+| one.two.three | one.two.three | atom; should we consider unpacking?            |
+
+Things can get more complicated in Flora-2.
+
+See also https://www.swi-prolog.org/pldoc/man?section=bidicts for an alternative approach we might consider.
+
+  #+begin_src haskell :tangle bnfc/prolog/ToProlog.hs
+    instance ToProlog ObjAttr where 
+      toProlog (OA_method oa commalist) = toProlog oa ++ "(" ++ toProlog commalist ++ ")"
+      toProlog (OA_dots objAttrElems) =
+        case asVar objAttrElems of
+          (inside, outside, Just asvar) -> outside ++ "(" ++ intercalate "," [inside, asvar] ++ ")"
+          (inside, outside, Nothing)    -> outside ++ "(" ++ inside ++ ")"
+
+    asVar :: [ObjAttrElem] -> (String, String, Maybe String)
+    asVar objAttrElems =
+       let oalist = toProlog <$> objAttrElems
+           outside = last oalist
+           inside  = head oalist
+        in
+        if and [ length oalist == 2
+               , isUpper . head $ outside
+               , isUpper . head $ inside ]
+        then (inside, lcfirst outside, Just $ titleCase outside)
+        else (inside, lcfirst outside, Nothing)
+        where titleCase "" = ""
+              titleCase (x:xs) = toTitle x : xs
+              lcfirst "" = ""
+              lcfirst (x:xs) = toLower x : xs
+       
+
+    instance ToProlog ObjAttrElem where 
+      toProlog (ObjAttrElemIdent (Ident oaeii)) = oaeii
+
+    instance ToProlog PredExpr where 
+      toProlog (PEOA oa)  = toProlog oa
+      toProlog (PEAnd exp1 exp2) = toProlog exp1 ++ ", " ++ toProlog exp2
+      toProlog (PEOr  exp1 exp2) = toProlog exp1 ++ ", " ++ toProlog exp2
+      toProlog (PEME  matchexp)  = toProlog matchexp
+
+    instance ToProlog MatchExpr where
+      toProlog (ME_OA_JL oa@(OA_dots oaes) jl) =
+        case asVar oaes of
+          (inside, outside, Just asvar) -> intercalate ", " [ toProlog oa, "match(" ++ asvar, toProlog jl ++ ")" ]
+          (inside, outside, Nothing)    -> "%% not sure what to do here"
+      toProlog (ME_OA_JL oa jl) = "%% unable to render a match against a junctionlist because the object-attribute doesn't look like Upper.lower"
+      toProlog (ME_True)        = "true"
+      toProlog (ME_False)       = "false"
+
+    instance ToProlog JunctionList where
+      toProlog (JL_Comma l) = "plain, [" ++ toProlog l ++ "]"
+      toProlog (JL_And   l) =   "and, [" ++ toProlog l ++ "]"
+      toProlog (JL_Or    l) =    "or, [" ++ toProlog l ++ "]"
+      toProlog (JL_Xor   (XorList l)) -- you can take out the plain bit when the xor match in prolog is working properly
+        | length l == 1       = "plain, [" ++ toProlog (XorList l) ++ "]"
+        | otherwise           =   "xor, [" ++ toProlog (XorList l) ++ "]"
+
+    instance ToProlog CommaList where
+      toProlog (CommaList  l) = intercalate ", " $ toProlog <$> l
+    instance ToProlog   AndList where toProlog (  AndList l) = intercalate ", " $ toProlog <$> l
+    instance ToProlog    OrList where toProlog (   OrList l) = intercalate ", " $ toProlog <$> l
+    instance ToProlog   XorList where toProlog (  XorList l) = intercalate ", " $ toProlog <$> l
+
+    instance ToProlog CommaElem where
+      toProlog (CommaElemObjAttr oa) = toProlog oa
+      toProlog (CommaElemString  oa) = show oa
+    instance ToProlog   AndElem where
+      toProlog (  AndElemObjAttr oa) = toProlog oa
+      toProlog (  AndElemString  oa) = show oa
+    instance ToProlog    OrElem where
+      toProlog (   OrElemObjAttr oa) = toProlog oa
+      toProlog (   OrElemString  oa) = show oa
+    instance ToProlog   XorElem where
+      toProlog (  XorElemObjAttr oa) = toProlog oa
+      toProlog (  XorElemString  oa) = show oa
+
+#+end_src
+
+Some helper functions
+  #+begin_src prolog :tangle bnfc/prolog/prelude.pl
+    % this file is autogenerated! -*- prolog -*-
+    % 1. tangle dsl/README.org using C-c C-v C-t
+    % 2. run (cat prelude.pl; ./mkProlog test1.l4) > potato.pl
+
+    :- use_module(library(yall)).
+
+    match(Elem, or,  List)   :- member(Elem, List).
+    match(Elem, and, List)   :- maplist(  [X]>>myeq(X,Elem), List).
+    match(Elem, xor, List)   :- partition([X]>>myeq(X,Elem), List, In, _Out), length(In,L), L = 1.
+    match(Elem, plain, List) :- match(Elem, or, List).
+    myeq(A,B) :- A == B.
+    
+    % set up a couple of test potatoes
+    species(potato1, "Solanum tuberosum").
+    species(potato2, "Ipomoea batatas").
+
+  #+end_src
+
+**** Flora-2
+
+**** Python for DocAssemble
+
+**** Javascript because Javascript is everywhere, like bacteria on your skin
+
+
+
+* Underlying Logics and Concepts
+
+We build on a combination of the lamdba, mu, and pi calculi. What would we do without the Greeks?
+
+** Temporals: Time
+
+We need to say things like: from T1 to T2, X was married to Y; from T3 to T4, X was married to Z. (OWL doesn't support this; it's timeless.)
+
+We want [[https://en.wikipedia.org/wiki/Temporal_database][multi-temporality]]: at time T1, party P believed that the legislation then in effect was L1; however, at time T3, party P realized that the legislation in effect at T1 was actually L2, having replaced L1 at time T2. However, L2 made provision that at time T1, the effective result for parties in P's situation would be as if L1 were in effect.
+
+So, we need the usual temporal notions of deadlines, durations, relative and absolute time referents, repeating periods.
+
+- Temporals :: DMN refers to a standard temporal theory of before/overlap/after. We want to reconcile that with the Event and Situation calculi.
+
+#+BEGIN_QUOTE
+*Comment MS:* I think there are two issues involved in the above discussion of multi-temporality:
+- the question how time evolves during the lifetime of a contract (assuming
+  that the rule set remains stable) and which actions are / have to be taken
+  at each moment by the parties involved. Formal models for this are Timed
+  Automata, Petri Nets etc. These generate / accept a set of traces, and one
+  can reason about them with temporal logics (LTL, CTL: "eventually / always",
+  "in some / all runs") or their timed variants (TCTL: "some time in the next
+  50 time units"). This technology is well understood at least in isolation,
+  but maybe not in conjunction with all the other features we need.
+- the question how the validity of a rule set changes over time. Seems closely
+  related to the question of metarules mentioned below. These seem extremely
+  difficult to deal with in full generality. A self-referential rule like
+  "This rule will not be valid in a month any more" looks like a variant of
+  the Liar's Paradox: Either the rule is still valid in a month (but
+  shouldn't be according to what it states), or it is not valid in a month
+  (but then there is no rule contradicting its validity, so as a rule
+  appearing in a contract, why shouldn't it be valid?). To avoid these
+  paradoxes, one would need a stratified set of rules, and a prover would have
+  to iterate several times over the rule set to determine the applicable rules.
+#+END_QUOTE
+
+#+begin_quote
+*Meng's thoughts*: Yes, that makes sense. What software already knows how to reason in this way?
+#+end_quote
+
+** Deontics: Obligations, Permissions, and Prohibitions
+
+Meng thinks the whole Chisholm family of paradoxes is only a problem in a framework that doesn't define obligations in terms of breach.
+
+"You gotta do X." "Or what?" "Or nothing." "Then I don't gotta do it, do I?"
+
+So, in Forrester's paradox, if the penalties for each level of murder -- gentle vs bloody -- are explicitly given in a partial order, then the paradox goes away.
+
+#+BEGIN_QUOTE
+*Comment MS:* I agree and hope we can do without explicitly using deontic
+ logic. A rule R might say: "if condition C is met, you have to do A". If one
+ reads this as an /obligation to do/ and not an /obligation to be/, one can
+ give it an operational reading: if, in the current state, condition C is
+ satisfied and I take action A, then I will get into a state of conformity
+ with rule R. If I do not take action A, I will get into a state where I
+ breach rule R. Other rules might say that there is a penalty for this breach,
+ and I can explicitly reason about the costs: If I am late arriving at the
+ airport, is it better to park the car in a non-parking zone and pay a fine or
+ to miss the plane?
+
+Question: which kind of obligations do we have: /to do/ or /to be/?
+#+END_QUOTE
+
+#+begin_quote
+*Meng's thoughts: Right. Let's agree that we aren't going to do traditional SDL.
+
+We borrow some of the useful ideas of deontic logic, e.g. may Y => not must not Y.
+
+But we don't talk about "must be", we only talk about "must do".
+
+People have choice, the way people had choice in the Israeli daycare case: [[https://rady.ucsd.edu/faculty/directory/gneezy/pub/docs/fine.pdf]["A Fine is a Price"]].
+
+The gentle murderer gets 10 years in prison.
+
+The bloody murderer gets 20 years in prison.
+
+No problem.
+
+Hvitved takes this approach; chapter 2 talks about choice.
+#+end_quote
+
+** Party
+
+The notion of party is complicated by the notion of "affiliates" and "subsidiaries". Also by the notion of a power of attorney, a trust, and other agent relationships.
+
+Sometimes a master agreement will establish a relationship between one group of companies and another group of companies. So we even get to employ the concept of transitive closure.
+
+See https://youtu.be/b6kkvvHfEOo?t=420 for a simple case of detecting such relations.
+
+** States, Actions, and Events: 
+
+What LegalRuleML calls "maintenance" and "achievement" obligations.
+
+This is an opportunity to use LTL/CTL.
+
+** Definitions and truth values
+
+What LegalRuleML calls "constitutive rules", as opposed to regulative or prescriptive rules. This is one place where we might talk about FOL and a choice of well-founded semantics vs the stable model semantics.
+
+The recent discourse about binary vs nonbinary genders gives a good opportunity to talk about binary vs ternary logics.
+
+** Default logic
+
+See section below on Rules and Metarules.
+
+** Defeasible Logic
+
+Do we really need explicit defeasibility?
+
+** Subjective Perspective:
+
+I want our epistemic theory to be able to express "X thinks Y thinks Z is true."
+
+Or, "Interpretation /I1/ of this text assigns one set of truth values to the following formula; Interpretation /I2/ assigns a different set, and so on."
+
+In 2020 it seems appropriate for a KRR system to admit multiple points of view, rather than to hold to set of global, universal truths. If the parties "agree to disagree", our "artificial intelligence" should not be flummoxed: “The test of a first-rate intelligence,” he said, “is the ability to hold two opposed ideas in the mind, at the same time, and still retain the ability to function.” https://quoteinvestigator.com/2020/01/05/intelligence/
+
+Within the text, a grammar of epistemic modals should handle this.
+
+In the interpreter, we might rely on answer-set-programming or SAT to construct multiple interpretive universes. Ambiguous interpretations of source text could simply show up as branching alternatives.
+
+** Space: "Jurisdiction"
+
+Different countries have different defaults and interpretational conventions.
+
+A clause may be enforceable in one jurisdiction but not in another.
+
+Enforceability is a judgement to be applied late in the compilation process.
+
+** Specificity: Intensionality and Extensionality
+
+- "No party who qualifies under section 12 may ..."
+
+- "Alice Apple, of 1 Address Point, specifically may ..."
+
+So the quantifiers of FOL are relevant here.
+
+** Scope: for the purposes of this section
+** Stack: the Call Stack as input to a function
+
+While this is not recommended, some styles of drafting say:
+
+Definition of X:
+- for the purposes of P1, X is X1;
+- for the purposes of P2, X is X2;
+- however, if the use of this variable X causes some Y to be negative, then X shall be the nearest number needed for Y to be non-negative.
+
+This "easier said than done" sentence gets us into constraint programming and linear equations.
+
+What if purpose P1 stacks a hypothetical purpose P2 in its call to X?
+
+We need a meta-rule along the lines of /lex specialis/ which tells us that in such a situation P2 is located closer in the call stack to X than P1.
+
+** Supposing: hypothetical, counterfactual specification with some variable set to other than what it "should be"
+
+The Weekend Dinner price of a dish is 1.5 times what the price of the dish would have been if it were served for Weekday Lunch.
+
+#+begin_example
+DEEM              dish.price(weekend=true,  period=dinner) =
+     hypothetical(dish.price(weekend=false, period=lunch)) * 1.5
+#+end_example
+
+This looks simple enough. Is it really necessary to wrap it in a "hypothetical"? Maybe yes, maybe no.
+
+What if the computation actually depends on a whole bunch of State? In fact, it could get worse -- it could depend on the call stack:
+
+** Natural Language Support
+
+This isn't strictly a logical matter, but if we are to extract (controlled) natural language isomorphisms we will need ways to annotate the L4 syntax with hints. In particular, idioms (in NL) and functions/macros (in L4) are a way of compacting longer expressions into shorter, reusable versions.
+
+** Macros and Functions
+
+"Homoiconicity" refers to the idea that a program may modify itself. Contracts and laws frequently include "pragma" and "macro" type statements intended to influence interpretation.
+
+** <<<Rules and Metarules>>>
+
+If multiple rules ostensibly conflict, that just means they are really only rule fragments, and need to be resolved by composition into a larger coherent rule.
+
+Laws are sometimes written as if the drafters were drunk:
+
+#+begin_example
+1. Section 1.
+   1. The speed limit is 100.
+   2. No person may exceed the speed limit.
+   3. Any person who may exceed the speed limit shall pay a fine of $100 for every 10 kph above the speed limit.
+   4. The speed limit is 80 when it is raining.
+   5. The speed limit may be increased beyond 100 during clear weather in daytime.
+   6. Nothing in this section 1 shall allow a speed greater than 120.
+#+end_example
+
+Read literally, these rules all contradict each other. They need to be read together in context:
+
+#+begin_src haskell
+  type Raining = Bool
+  type Daytime = Bool
+  speedlimit :: Raining -> Daytime -> Int
+  speedlimit False False = 100
+  speedlimit False True  = 120
+  speedlimit True  _     = 80
+#+end_src
+
+Sometimes people talk about "default logic". In conventional programming, defaults go at the end.
+
+#+begin_src python
+  def speedlimit (raining, daytime):
+      if raining: return 80
+      if daytime: return 120
+      return             100
+#+end_src
+
+In legal drafting, the order is inverted: defaults go at the top; exceptions appear below; exceptions to exceptions appear farther below.
+
+** Explainability
+
+"Show your work: explain to me all the reasons that the outcome was calculated as it was."
+
+The Youtube link above to Coherent Knowledge's Ergo for Financial Regulation demo around Reg W is a good example of what explanation should look like, at least for a datalog-type query.
+
+See also: the New Zealand rates rebates case
+https://github.com/smucclaw/complaw/blob/master/doc/ex-nz-rates-20200909/aotearoa-haskell
+
+#+begin_example
+mengwong@solo-wmw ~/src/smucclaw/complaw/doc/ex-nz-rates-20200909/aotearoa-haskell $ stack exec aotearoa-exe -- combined_income=20000 dependants=0 rates_total=2000 additional_per_dependant=500 initial_contribution=160 maximum_allowable=630 income_threshold=25180 --goal=l4/from-openfisca-rr.l4 --nlgstyle=concrete
+showing how we obtain the answer
+630.00 -- which is
+  the greater of
+  simply 0.00
+  and
+  630.00 -- which is
+    the lesser of
+    1874.67 -- which is
+      the difference between
+      1840.00 -- which is
+        the difference between
+        2000.00 -- which is
+          rates_total, the rates payable for that rating year in respect of the property
+        and
+        160.00 -- which is
+          initial_contribution, the initial contribution by ratepayer
+      and
+      -34.67 -- which is
+        the sum of
+        613.33 -- which is
+          the quotient given by
+          1840.00 -- which is
+            the difference between
+            2000.00 -- which is
+              rates_total, the rates payable for that rating year in respect of the property
+            and
+            160.00 -- which is
+              initial_contribution, the initial contribution by ratepayer
+          divided by
+          simply 3.00
+        with
+        -648.00 -- which is
+          $1 for each $8 in
+          -5180.00 -- which is
+            the difference between
+            20000.00 -- which is
+              combined_income, the ratepayer's income for the preceding tax year
+            and
+            25180.00 -- which is
+              the sum of
+              0.00 -- which is
+                the product of
+                0.00 -- which is
+                  dependants, person who was a dependant of the ratepayer
+                multiplied by
+                500.00 -- which is
+                  additional_per_dependant, the additional allowable income per dependant
+              with
+              25180.00 -- which is
+                income_threshold, the income threshold
+    and
+    630.00 -- which is
+      maximum_allowable, the maximum rebate allowed
+
+#+end_example
+
+See also: argumentation theory.
 
 * Output
 

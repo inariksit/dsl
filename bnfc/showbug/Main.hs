@@ -26,9 +26,10 @@ main = do
       stdout <- return.lines =<< readFile stdoutfile
       orig   <- return.lines =<< readFile origfile
       let coords = getErrorCoordinates $ stdout ++ stderr
-      case coords of
-        Nothing -> mapM putStrLn stdout                 >> exitSuccess
-        Just xy -> mapM putStrLn (showAtCoords orig xy) >> exitFailure
+      case (coords, stderr) of
+        (Nothing,[]) -> mapM putStrLn stdout                 >> exitSuccess
+        (Nothing,_)  -> mapM putStrLn stderr                 >> exitFailure
+        (Just xy,_)  -> mapM putStrLn (showAtCoords orig xy) >> exitFailure
 
 usage = do
   putStrLn "showbug test1.l4 out/test1.out out/test1.err"

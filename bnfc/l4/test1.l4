@@ -4,12 +4,12 @@ import ContractLaw
 
 RULE 1 ruleOne :en:"First Rule" NOOP
 RULE 2 edible
- DEEM Item.isEdiblePotato
-  AND Item.isTastyFood
-  WHEN Item.isPotato
-   AND Item.isEdible
+ DEEM Item IS EdiblePotato
+          AND TastyFood
+  WHEN Item IS Potato
+   AND Item IS Edible
 RULE 3 isPotato
-  DEEM Item.isPotato
+  DEEM Item IS Potato
   WHEN Item.species ~ ["Solanum tuberosum" | "Mister Potatohead"]
 
 // an OR-LIST expands to
@@ -29,20 +29,16 @@ ENTITY charlie ISA Human WITH isNoble = true
 ENTITY daryl   ISA Human WITH isNoble = false
 
 RULE noblePotato
-  DEEM Item.isNoble
-  WHEN Item.isPotato
+  DEEM Item IS Noble
+  WHEN Item ISA Potato
    AND Item.previousOwners.First.isNoble
    AND Item.previousOwners.Second.isNoble
-RULE isPotato
-  DEEM Item
-  TOBE Potato
-  WHEN Item.isPotato
 RULE noblePotato2
-  DEEM Potato.isNoble
+  DEEM Potato IS Noble
   WHEN Potato.previousOwners.*.isNoble >= 2
 RULE noblePotato3
-  DEEM Potato.isNoble
-  WHEN Potato.previousOwners.[Owner1,Owner2].isNoble
+  DEEM Potato IS Noble
+  WHEN Potato.previousOwners.[Owner1,Owner2] IS Noble
 
 // the Prolog version of the above is:
 // isEdiblePotato(Item) :- isPotato(Item), isEdible(Item).
